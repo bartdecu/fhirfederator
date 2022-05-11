@@ -1,7 +1,6 @@
 package ca.uhn.fhir.federator;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,8 +10,8 @@ public class ResourceRegistry {
     private Map<String,List<String>> map = new LinkedHashMap<>();
     private List<String> defaultServers;
 
-    public ResourceRegistry(String string){
-        this.defaultServers = Arrays.asList(string);
+    public ResourceRegistry(List<String> defaults){
+        this.defaultServers = defaults;
     }
 
     List<String> getServer4Resource(String resource){

@@ -63,10 +63,10 @@
 			<version>2.7.0</version>
 		</dependency>
 		<dependency>
-    <groupId>ca.uhn.hapi.fhir</groupId>
-    <artifactId>hapi-fhir-validation</artifactId>
-    <version>${hapifhir_version}</version>
-</dependency>
+			<groupId>ca.uhn.hapi.fhir</groupId>
+			<artifactId>hapi-fhir-validation</artifactId>
+			<version>${hapifhir_version}</version>
+		</dependency>
 
 		<!-- 
 		HAPI-FHIR uses Logback for logging support. The logback library is included 
@@ -98,6 +98,11 @@
 			<artifactId>junit-vintage-engine</artifactId>
 			<version>5.4.0</version>
 			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.yaml</groupId>
+			<artifactId>snakeyaml</artifactId>
+			<version>1.21</version>
 		</dependency>
 
 	</dependencies>
@@ -142,7 +147,7 @@
 
 
 
-			
+
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>build-helper-maven-plugin</artifactId>

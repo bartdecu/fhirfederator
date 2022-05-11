@@ -12,4 +12,4 @@ These features are supported:
 
 There are many features and configuration options to add...
 
-Configuration is now done in code in __https://github.com/bartdecu/fhirfederator/blob/main/src/main/java/ca/uhn/fhir/federator/FederatorRestfulServer.java__
+Configuration is now done in __https://github.com/bartdecu/fhirfederator/blob/main/resources/federator.yaml__
