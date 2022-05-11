@@ -11,3 +11,5 @@ These features are supported:
 * Equality between resources is determined by one or more common identifiers. Resources without identifier will never be equal to another resource.
 
 There are many features and configuration options to add...
+
+Configuration is now done in code in __src\main\java\ca\uhn\fhir\federator\FederatorRestfulServer.java__
