@@ -180,44 +180,40 @@ public class FederatedSearchProvider {
 
     for (int j = 0; j < perParameter.size(); j++) {
 
-      List<ParsedUrl> actual = perParameter.get(j);
+      List<ParsedUrl> urlsPerParameter = perParameter.get(j);
       Map<String, List<IBaseResource>> idMap = new HashMap<>();
 
-      for (int i = (actual.size() - 1); i >= 0; i--) {
-        ParsedUrl url = actual.get(i);
+      for (int i = (urlsPerParameter.size() - 1); i >= 0; i--) {
+        ParsedUrl url = urlsPerParameter.get(i);
         String resource = url.getResource();
-        if (url.getPlaceholder() != null) {
-          if (idMap.get(url.getPlaceholder().getKey()) != null) {
-            List<IBaseResource> list = idMap.get(url.getPlaceholder().getKey());
-            List<String> identifiers = getIdentifiersFromResources(list, url.getPlaceholder(), this.getCtx(), this.s2f);
-            url.setValue(StringUtils.join(identifiers, ","));
-          }
-        }
-        List<IBaseResource> result = null;
-        if (StringUtils.isEmpty(url.getValue())) {
-          result = Collections.emptyList();
-        } else {
-          List<String> servers = rr.getServer4Resource(resource);
-          Stream<String> stream = servers.parallelStream();
-          result = stream.flatMap(backendFhir -> {
+        List<ParsedUrl> executableUrls = createExecutableUrl(idMap, url, rr );
+        for (ParsedUrl executableUrl : executableUrls) {
+          List<IBaseResource> result = null;
+          if (StringUtils.isEmpty(executableUrl.getValue())) {
+            result = Collections.emptyList();
+          } else {
+            List<ResourceConfig> servers = rr.getServer4Resource(resource);
+            Stream<ResourceConfig> stream = servers.parallelStream();
+            result = stream.flatMap(resourceConfig -> {
 
-            IGenericClient client = cr.getClient(backendFhir);
-            String completeUrl;
-            completeUrl = backendFhir + "/" + url.toString();
-            ourLog.info("Client request Url: {}", completeUrl);
-            return getResultsForURL(client, completeUrl).stream();
-          }).collect(Collectors.<IBaseResource>toList());
-        }
-        List<IBaseResource> list = idMap.get(resource);
-        if (list == null || list.isEmpty()) {
-          idMap.put(resource, result);
-        } else {
-          list.addAll(result);
+              IGenericClient client = cr.getClient(resourceConfig.getServer());
+              String completeUrl;
+              completeUrl = resourceConfig.getServer() + "/" + executableUrl.toString();
+              ourLog.info("Client request Url: {}", completeUrl);
+              return getResultsForURL(client, completeUrl).stream();
+            }).collect(Collectors.<IBaseResource>toList());
+          }
+          List<IBaseResource> list = idMap.get(resource);
+          if (list == null || list.isEmpty()) {
+            idMap.put(resource, result);
+          } else {
+            list.addAll(result);
+          }
         }
 
       }
 
-      toAnd.add(idMap.get(actual.get(0).getResource()));
+      toAnd.add(idMap.get(urlsPerParameter.get(0).getResource()));
     }
 
     if (toAnd.size() == 1) {
@@ -236,6 +232,37 @@ public class FederatedSearchProvider {
       return result.get(0);
     }
 
+  }
+
+  private List<ParsedUrl> createExecutableUrl(Map<String, List<IBaseResource>> idMap, ParsedUrl url, ResourceRegistry rr) {
+    List<ParsedUrl> retVal = new ArrayList<>();
+    String resource = url.getResource();
+    if (url.getPlaceholder() != null) {
+      if (idMap.get(url.getPlaceholder().getKey()) != null) {
+        List<IBaseResource> list = idMap.get(url.getPlaceholder().getKey());
+        List<String> identifiers = getIdentifiersFromResources(list, url.getPlaceholder(), this.getCtx(), this.s2f);
+        int batch = rr.getMaxOr4Resource(resource);
+        int counter = 0;
+        List<String> idBatch = new ArrayList<>();
+        for (String identifier: identifiers){        
+          if (counter<batch){
+            idBatch.add(identifier);
+          } else {
+            counter = 0;
+            retVal.add(new ParsedUrl(resource, url.getKey(), StringUtils.join(idBatch,",")));
+            idBatch.clear();
+            idBatch.add(identifier);
+          }
+          counter++;
+        }
+        if (!idBatch.isEmpty()){
+          retVal.add(new ParsedUrl(resource, url.getKey(), StringUtils.join(idBatch,",")));
+        }
+      }
+    } else {
+      retVal.add(url);
+    }
+    return retVal;
   }
 
   private static List<String> getIdentifiersFromResources(List<IBaseResource> list,
@@ -289,7 +316,7 @@ public class FederatedSearchProvider {
     return identifiers;
   }
 
-@SuppressWarnings("unused")
+  @SuppressWarnings("unused")
   private List<IBaseResource> doSimpleMultiplex(HttpServletRequest theServletRequest, String tenantAndResource) {
     Set<String> keys = cr.getKeySet();
     Stream<String> stream = keys.parallelStream();
