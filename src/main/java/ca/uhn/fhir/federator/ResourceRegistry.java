@@ -1,21 +1,25 @@
 package ca.uhn.fhir.federator;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+
+import org.springframework.util.comparator.Comparators;
 
 public class ResourceRegistry {
     
-    private Map<String,List<String>> map = new LinkedHashMap<>();
-    private List<String> defaultServers;
+    private Map<String,List<ResourceConfig>> map = new LinkedHashMap<>();
+    private List<ResourceConfig> defaultServers;
 
-    public ResourceRegistry(List<String> defaults){
+    public ResourceRegistry(List<ResourceConfig> defaults){
         this.defaultServers = defaults;
     }
 
-    List<String> getServer4Resource(String resource){
-        List<String> list = map.get(resource);
+    List<ResourceConfig> getServer4Resource(String resource){
+        List<ResourceConfig> list = map.get(resource);
         if (list == null || list.isEmpty()){
             return defaultServers;
         } else {
@@ -24,8 +28,8 @@ public class ResourceRegistry {
     }
 
 
-    void putServer4Resource(String resource, String server){
-        List<String> list = map.get(resource);
+    void putServer4Resource(String resource, ResourceConfig server){
+        List<ResourceConfig> list = map.get(resource);
         if (list == null){
             map.put(resource,new ArrayList<>());
         }
@@ -35,5 +39,13 @@ public class ResourceRegistry {
         } else {
             list.add(server);
         }
+    }
+
+    public int getMaxOr4Resource(String resource) {
+        List<ResourceConfig> configs = getServer4Resource(resource);
+
+        Optional<Integer> min = configs.stream().map(x -> x.getMaxOr()==null?10:x.getMaxOr()).min(Comparators.comparable());
+
+        return min.orElse(10);
     }     
 }

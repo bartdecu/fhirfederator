@@ -41,20 +41,20 @@ public class FederatorRestfulServer extends RestfulServer {
 		if(defaults == null){
 			throw new RuntimeException("No resources.default in federator.yaml");
 		}
-		List<String> defaultUrls = new ArrayList<>();
+		List<ResourceConfig> defaultUrls = new ArrayList<>();
 		for (Map<String, Object> deFault : defaults){
-			defaultUrls.add((String)deFault.get("url"));
+			defaultUrls.add(new ResourceConfig((String)deFault.get("url"), (Integer) deFault.get("maxOr")));
 
 		}
-		List<DefaultKeyValue<String,List<String>>> resourceUrls = new ArrayList<>();
+		List<DefaultKeyValue<String,List<ResourceConfig>>> resourceUrls = new ArrayList<>();
 		Map<String,Object> otherResources = (Map<String,Object>) resources.get("other");
 		if (otherResources != null){
 			
 			for ( String otherResource:otherResources.keySet()){
 				List<Map<String, Object>> resourceObjects =(List<Map<String, Object>>) otherResources.get(otherResource);
-				List<String> resourceLocs = new ArrayList<>();
+				List<ResourceConfig> resourceLocs = new ArrayList<>();
 				for (Map<String, Object> resourceObject:resourceObjects){
-					resourceLocs.add((String)resourceObject.get("url"));
+					resourceLocs.add(new ResourceConfig((String)resourceObject.get("url"), (Integer) resourceObject.get("maxOr")));
 				}
 				resourceUrls.add(new DefaultKeyValue<>(otherResource,resourceLocs));
 			}
@@ -74,9 +74,9 @@ public class FederatorRestfulServer extends RestfulServer {
 		setFhirContext(FhirContext.forR4());
 		ClientRegistry cr = new ClientRegistry(clientUrls);
 		ResourceRegistry rr = new ResourceRegistry(defaultUrls);
-		for (DefaultKeyValue<String, List<String>> resourceUrl:resourceUrls){
-			for (String url:resourceUrl.getValue()){
-				rr.putServer4Resource(resourceUrl.getKey(), url);
+		for (DefaultKeyValue<String, List<ResourceConfig>> resourceUrl:resourceUrls){
+			for (ResourceConfig resourceConfig:resourceUrl.getValue()){
+				rr.putServer4Resource(resourceUrl.getKey(), resourceConfig);
 			}
 
 		}
