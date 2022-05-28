@@ -2,10 +2,12 @@ package ca.uhn.fhir.federator;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.antlr.v4.runtime.ANTLRErrorListener;
 import org.antlr.v4.runtime.ANTLRInputStream;
@@ -66,7 +68,7 @@ public class TestFhirUrlParser {
 
     private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(TestFhirUrlParser.class);
 
-    @Ignore
+    @Test
     public void testExploratoryString() throws IOException {
 
         String simplestProgram = "Patient?_has:Observation:patient:_has:AuditEvent:entity:agent:Practitioner.name=janedoe";
@@ -81,7 +83,7 @@ public class TestFhirUrlParser {
 
     }
 
-    @Ignore
+    @Test
     public void testExploratoryString1() throws IOException {
 
         String simplestProgram = "DiagnosticReport?subject:Patient.name=Sarah";
@@ -95,7 +97,7 @@ public class TestFhirUrlParser {
 
     }
 
-    @Ignore
+    @Test
     public void testExploratoryString2() throws IOException {
 
         String simplestProgram = "Encounter?subject=Patient/78a14cbe-8968-49fd-a231-d43e6619399f";
@@ -109,7 +111,7 @@ public class TestFhirUrlParser {
 
     }
 
-    @Ignore
+    @Test
     public void testExploratoryString3() throws IOException {
 
         String simplestProgram = "Encounter?subject:Patient.birthdate=1987-02-20";
@@ -123,7 +125,7 @@ public class TestFhirUrlParser {
 
     }
 
-    @Ignore
+    @Test
     public void testExploratoryString4() throws IOException {
 
         String simplestProgram = "Patient?birthdate:missing=true";
@@ -153,7 +155,7 @@ public class TestFhirUrlParser {
 
     }
 
-    @Ignore
+    @Test
     public void testExploratoryString6() throws IOException {
 
         String simplestProgram = "Patient?identifier=https://github.com/synthetichealth/synthea|621338a9-01f4-49d4-b852-14507a8bf8c7";
@@ -219,7 +221,7 @@ public class TestFhirUrlParser {
     
 
     // TODO _include and _revinclude are todo
-    @Ignore
+    @Test
     public void testRevInclude() throws IOException {
 
         String simplestProgram = "Patient?_revinclude=Encounter:subject";
@@ -227,26 +229,79 @@ public class TestFhirUrlParser {
         List<List<String>> actual = toUrls(simplestProgram);
         System.out.println(actual);
 
-        List<List<String>> expected = Arrays.asList(Arrays.asList("Patient?general-practitioner.identifier={Practitioner}",
-                "Patient?general-practitioner.identifier={Practitioner}", "Practitioner?name=Sarah",
-                "Practitioner?address-state=WA"));
+        List<List<String>> expected = Arrays.asList(Arrays.asList("Patient"),Arrays.asList("Encounter?subject={Patient.identifier}"));
 
         Assert.assertEquals(expected, actual);
 
     }
 
+
+    @Test
+    public void testRevInclude1() throws IOException {
+
+        String simplestProgram = "Patient?name=Hodges&_revinclude=Encounter:subject";
+
+        List<List<String>> actual = toUrls(simplestProgram);
+        System.out.println(actual);
+
+        List<List<String>> expected = Arrays.asList(Arrays.asList("Patient?name=Hodges"),Arrays.asList("Encounter?subject={Patient.identifier}"));
+
+        Assert.assertEquals(expected, actual);
+
+    }
+
+    @Test
+    public void testRevInclude2() throws IOException {
+
+        String simplestProgram = "Patient?_revinclude=Encounter:subject&identifier=http://hl7.org/fhir/sid/us-ssn|999622736";
+
+        List<List<String>> actual = toUrls(simplestProgram);
+        System.out.println(actual);
+
+        List<List<String>> expected = Arrays.asList(Arrays.asList("Patient?identifier=http://hl7.org/fhir/sid/us-ssn|999622736"),Arrays.asList("Encounter?subject={Patient.identifier}"));
+
+        Assert.assertEquals(expected, actual);
+
+    }
+
+    //Patient?_revinclude=Encounter:subject&identifier=http://hl7.org/fhir/sid/us-ssn|999622736
+
     private List<List<String>> toUrls(String simplestProgram) throws IOException {
         FhirUrlAnalyser visitor = toVisitor(simplestProgram);
 
-        List<ParserRuleContext> httpParams = visitor.getHttpParams();
-
-        List<List<ParsedUrl>> perParameter = httpParams.stream()
+        List<List<ParsedUrl>> perAndParameter = visitor.getAndParameters().stream()
                 .map(httpParam -> visitor.getResourcesForHttpParam(httpParam).stream()
                         .map(resourceInParam -> new ParsedUrlCreator(resourceInParam, httpParam).createUrl())
+                        .flatMap(opt -> opt.isPresent()?Arrays.<ParsedUrl>asList(opt.get()).stream():Stream.<ParsedUrl>empty())
                         .collect(Collectors.toList()))
                 .collect(Collectors.toList());
 
-        return perParameter.stream().map(param -> param.stream().map(x->x.toString()).collect(Collectors.toList())).collect(Collectors.toList());
+                List<List<ParsedUrl>> perIncludeParameter;
+                if (perAndParameter.isEmpty()){
+            perAndParameter = visitor.getIncludeParameters().stream()
+                .map(httpParam -> visitor.getResourcesForHttpParam(httpParam).subList(0,1).stream()
+                        .map(resourceInParam -> new ParsedUrlCreator(resourceInParam, httpParam).createUrl())
+                        .flatMap(opt -> opt.isPresent()?Arrays.<ParsedUrl>asList(opt.get()).stream():Stream.<ParsedUrl>empty())
+                        .collect(Collectors.toList()))
+                .collect(Collectors.toList());
+
+        } 
+            perIncludeParameter = visitor.getIncludeParameters().stream()
+                .map(httpParam -> visitor.getResourcesForHttpParam(httpParam).subList(1,visitor.getResourcesForHttpParam(httpParam).size()).stream()
+                        .map(resourceInParam -> new ParsedUrlCreator(resourceInParam, httpParam).createUrl())
+                        .flatMap(opt -> opt.isPresent()?Arrays.<ParsedUrl>asList(opt.get()).stream():Stream.<ParsedUrl>empty())
+                        .collect(Collectors.toList()))
+                .collect(Collectors.toList());
+
+        
+
+
+        List<List<String>> retVal = new ArrayList<>();
+        retVal.addAll(perAndParameter.stream().map(param -> param.stream().map(x->x.toString()).collect(Collectors.toList())).collect(Collectors.toList()));
+        retVal.addAll(perIncludeParameter.stream().map(param -> param.stream().map(x->x.toString()).collect(Collectors.toList())).collect(Collectors.toList()));
+        
+
+        return retVal;
     }
 
     public static FhirUrlAnalyser toVisitor(String simplestProgram) throws IOException {
