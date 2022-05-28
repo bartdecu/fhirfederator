@@ -2,7 +2,6 @@ package ca.uhn.fhir.federator;
 
 import java.io.IOException;
 import java.io.StringReader;
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -22,19 +21,14 @@ import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.TokenSource;
 import org.antlr.v4.runtime.TokenStream;
-import org.apache.commons.collections4.keyvalue.DefaultMapEntry;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.hl7.fhir.instance.model.api.IBase;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.Bundle;
-import org.hl7.fhir.r4.model.Bundle.BundleLinkComponent;
-import org.hl7.fhir.r4.model.Identifier;
 import org.hl7.fhir.r4.model.Patient;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.federator.FhirUrlParser.SContext;
-import ca.uhn.fhir.fhirpath.IFhirPath;
 import ca.uhn.fhir.rest.annotation.Operation;
 import ca.uhn.fhir.rest.annotation.RequiredParam;
 import ca.uhn.fhir.rest.annotation.Search;
@@ -170,9 +164,10 @@ public class FederatedSearchProvider {
     // .forEach(r -> ourLog.info(TreeUtils.toPrettyTree(r.getParent(),
     // Arrays.asList(parser.getRuleNames()))));
 
-    List<List<ParsedUrl>> perParameter = visitor.getHttpParams().stream()
+    List<List<ParsedUrl>> perParameter = visitor.getAndParameters().stream()
         .map(httpParam -> visitor.getResourcesForHttpParam(httpParam).stream()
             .map(resourceInParam -> new ParsedUrlCreator(resourceInParam, httpParam).createUrl())
+            .flatMap(opt -> opt.isPresent() ? Arrays.<ParsedUrl>asList(opt.get()).stream() : Stream.<ParsedUrl>empty())
             .collect(Collectors.toList()))
         .collect(Collectors.toList());
 
@@ -180,177 +175,84 @@ public class FederatedSearchProvider {
 
     for (int j = 0; j < perParameter.size(); j++) {
 
-      List<ParsedUrl> urlsPerParameter = perParameter.get(j);
-      Map<String, List<IBaseResource>> idMap = new HashMap<>();
-
-      for (int i = (urlsPerParameter.size() - 1); i >= 0; i--) {
-        ParsedUrl url = urlsPerParameter.get(i);
-        String resource = url.getResource();
-        List<ParsedUrl> executableUrls = createExecutableUrl(idMap, url, rr );
-        for (ParsedUrl executableUrl : executableUrls) {
-          List<IBaseResource> result = null;
-          if (StringUtils.isEmpty(executableUrl.getValue())) {
-            result = Collections.emptyList();
-          } else {
-            List<ResourceConfig> servers = rr.getServer4Resource(resource);
-            Stream<ResourceConfig> stream = servers.parallelStream();
-            result = stream.flatMap(resourceConfig -> {
-
-              IGenericClient client = cr.getClient(resourceConfig.getServer());
-              String completeUrl;
-              completeUrl = resourceConfig.getServer() + "/" + executableUrl.toString();
-              ourLog.info("Client request Url: {}", completeUrl);
-              return getResultsForURL(client, completeUrl).stream();
-            }).collect(Collectors.<IBaseResource>toList());
-          }
-          List<IBaseResource> list = idMap.get(resource);
-          if (list == null || list.isEmpty()) {
-            idMap.put(resource, result);
-          } else {
-            list.addAll(result);
-          }
-        }
-
-      }
-
-      toAnd.add(idMap.get(urlsPerParameter.get(0).getResource()));
+      ParameterExecutor pe = new ParameterExecutor(perParameter.get(j), rr, cr, ctx, s2f);
+      List<IBaseResource> parameterResources = pe.execute();
+      toAnd.add(parameterResources);
     }
 
-    if (toAnd.size() == 1) {
-      return toAnd.get(0);
-    } else {
-      List<List<IBaseResource>> result = new ArrayList<>();
-      result.add(toAnd.get(0));
-      for (int i = 1; i < toAnd.size(); i++) {
-        result.add(0, toAnd.get(i).stream()
-            .distinct()
-            .filter(x -> result.get(0).stream().map(y -> new IBaseResourceIdentifierComparator().compare(x, y) == 0)
-                .reduce((a, b) -> a || b).orElse(false))
-            .collect(Collectors.toList()));
-      }
-      // perform and
-      return result.get(0);
+    List<IBaseResource> retVal;
+
+    switch (toAnd.size()) {
+      case 0:
+        retVal = new ArrayList<>();
+        break;
+      case 1:
+        retVal = toAnd.get(0);
+        break;
+      default:
+        // perform and
+        List<List<IBaseResource>> result = new ArrayList<>();
+        result.add(toAnd.get(0));
+        for (int i = 1; i < toAnd.size(); i++) {
+          result.add(0, toAnd.get(i).stream()
+              .distinct()
+              .filter(x -> result.get(0).stream().map(y -> new IBaseResourceIdentifierComparator().compare(x, y) == 0)
+                  .reduce((a, b) -> a || b).orElse(false))
+              .collect(Collectors.toList()));
+        }
+
+        retVal = result.get(0);
     }
 
-  }
-
-  private List<ParsedUrl> createExecutableUrl(Map<String, List<IBaseResource>> idMap, ParsedUrl url, ResourceRegistry rr) {
-    List<ParsedUrl> retVal = new ArrayList<>();
-    String resource = url.getResource();
-    if (url.getPlaceholder() != null) {
-      if (idMap.get(url.getPlaceholder().getKey()) != null) {
-        List<IBaseResource> list = idMap.get(url.getPlaceholder().getKey());
-        List<String> identifiers = getIdentifiersFromResources(list, url.getPlaceholder(), this.getCtx(), this.s2f);
-        int batch = rr.getMaxOr4Resource(resource);
-        int counter = 0;
-        List<String> idBatch = new ArrayList<>();
-        for (String identifier: identifiers){        
-          if (counter<batch){
-            idBatch.add(identifier);
-          } else {
-            counter = 0;
-            retVal.add(new ParsedUrl(resource, url.getKey(), StringUtils.join(idBatch,",")));
-            idBatch.clear();
-            idBatch.add(identifier);
-          }
-          counter++;
-        }
-        if (!idBatch.isEmpty()){
-          retVal.add(new ParsedUrl(resource, url.getKey(), StringUtils.join(idBatch,",")));
-        }
-      }
-    } else {
-      retVal.add(url);
-    }
-    return retVal;
-  }
-
-  private static List<String> getIdentifiersFromResources(List<IBaseResource> list,
-      DefaultMapEntry<String, List<String>> placeholder, FhirContext ctx, SearchParam2FhirPathRegistry s2f) {
-    final List<IBase> toProcess = new ArrayList<>(list);
-    final List<IBase> nextRound = new ArrayList<>();
-
-    placeholder.getValue().forEach(searchParam -> {
-
-      toProcess.forEach(inputResource -> {
-        String resourceName = inputResource.getClass().getSimpleName();
-        List<IBase> outputs;
-        IFhirPath fhirPath = ctx.newFhirPath();
-        String fp = s2f.getFhirPath(resourceName, searchParam);
-        outputs = fhirPath.evaluate(inputResource, fp, IBase.class);
-        nextRound.addAll(outputs);
-
-      });
-
-      toProcess.clear();
-      toProcess.addAll(nextRound);
-      nextRound.clear();
-
-    });
-
-    List<String> identifiers = toProcess.stream()
-        .flatMap(x -> {
-          Identifier id = (Identifier) x;
-          Stream<String> out = null;
-          if (id.getValue() == null) {
-            out = Collections.<String>emptyList().stream();
-          } else if (id.getSystem() == null) {
-            out = Arrays.asList(id.getValue()).stream();
-          } else {
-            out = Arrays.<String>asList(id.getSystem() + "|" + id.getValue()).stream();
-          }
-          return out;
-        }).distinct()
-
-        .map(x -> {
-          String encoded = null;
-          try {
-            encoded = URLEncoder.encode(x, "UTF-8");
-          } catch (Exception e) {
-          }
-          ;
-          return encoded;
-        })
-
-        .collect(Collectors.<String>toList());
-    return identifiers;
-  }
-
-  @SuppressWarnings("unused")
-  private List<IBaseResource> doSimpleMultiplex(HttpServletRequest theServletRequest, String tenantAndResource) {
-    Set<String> keys = cr.getKeySet();
-    Stream<String> stream = keys.parallelStream();
-    List<IBaseResource> result = stream.flatMap(backendFhir -> {
-      IGenericClient client = cr.getClient(backendFhir);
-      String completeUrl;
-      if (StringUtils.isNotBlank(theServletRequest.getQueryString())) {
-        completeUrl = backendFhir + tenantAndResource + "?" + theServletRequest.getQueryString();
-      } else {
-        completeUrl = backendFhir + tenantAndResource;
-      }
-      ourLog.info("Client request Url: {}", completeUrl);
-      return getResultsForURL(client, completeUrl).stream();
-    }).collect(Collectors.<IBaseResource>toList());
-    return result;
-  }
-
-  private static List<IBaseResource> getResultsForURL(IGenericClient client, String completeUrl) {
-    Bundle bundle = client.search().byUrl(completeUrl).returnBundle(Bundle.class).execute();
-    List<BundleLinkComponent> next = bundle.getLink().stream().filter(link -> link.getRelation().equals("next"))
+    List<List<ParsedUrl>> perIncludeParameter = visitor.getIncludeParameters().stream()
+        .map(httpParam -> visitor.getResourcesForHttpParam(httpParam).stream()
+            .map(resourceInParam -> new ParsedUrlCreator(resourceInParam, httpParam).createUrl())
+            .flatMap(opt -> opt.isPresent() ? Arrays.<ParsedUrl>asList(opt.get()).stream() : Stream.<ParsedUrl>empty())
+            .collect(Collectors.toList()))
         .collect(Collectors.toList());
 
-    List<IBaseResource> own = bundle.getEntry().stream().filter(bec -> {
-      return bec.getResource() instanceof IBaseResource;
-    })
-        .map(bec -> ((IBaseResource) bec.getResource())).collect(Collectors.toList());
-    ourLog.info("Client request Url: {} #{}", completeUrl, own.size());
-    List<IBaseResource> out = new ArrayList<>();
-    out.addAll(own);
-    if (!next.isEmpty()) {
-      List<IBaseResource> other = getResultsForURL(client, next.get(0).getUrl());
-      out.addAll(other);
+    List<IBaseResource> includedResources = new ArrayList<>();
+    for (int j = 0; j < perIncludeParameter.size(); j++) {
+      if (perParameter.isEmpty()) {
+        ParameterExecutor pe = new ParameterExecutor(perIncludeParameter.get(j).subList(0, 1), rr, cr, ctx, s2f);
+        List<IBaseResource> parameterResources = pe.execute();
+        retVal.addAll(parameterResources);
+      }
+      ParameterExecutor pe = new ParameterExecutor(
+          perIncludeParameter.get(j).subList(1, perIncludeParameter.get(j).size()), rr, cr, ctx, s2f);
+      Map<String, List<IBaseResource>> cachedResources = new HashMap<>();
+      cachedResources.put(perIncludeParameter.get(j).get(0).getResource(), retVal);
+      pe.setCachedResources(cachedResources);
+      List<IBaseResource> parameterResources = pe.execute();
+      includedResources.addAll(parameterResources);
     }
-    return out;
+
+    retVal.addAll(includedResources);
+
+    return retVal;
+
   }
+
+  /*
+   * @SuppressWarnings("unused")
+   * private List<IBaseResource> doSimpleMultiplex(HttpServletRequest
+   * theServletRequest, String tenantAndResource) {
+   * Set<String> keys = cr.getKeySet();
+   * Stream<String> stream = keys.parallelStream();
+   * List<IBaseResource> result = stream.flatMap(backendFhir -> {
+   * IGenericClient client = cr.getClient(backendFhir);
+   * String completeUrl;
+   * if (StringUtils.isNotBlank(theServletRequest.getQueryString())) {
+   * completeUrl = backendFhir + tenantAndResource + "?" +
+   * theServletRequest.getQueryString();
+   * } else {
+   * completeUrl = backendFhir + tenantAndResource;
+   * }
+   * ourLog.info("Client request Url: {}", completeUrl);
+   * return getResultsForURL(client, completeUrl).stream();
+   * }).collect(Collectors.<IBaseResource>toList());
+   * return result;
+   * }
+   */
 
 }

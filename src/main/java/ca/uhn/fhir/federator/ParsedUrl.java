@@ -56,8 +56,11 @@ public class ParsedUrl {
         this.placeholder = placeholder;
     }
     public String toString(){
-        String retVal = this.resource + '?' + this.key;
-        if (this.value != null || this.placeholder != null){
+        String retVal = this.resource; 
+        if (this.key != null){
+         retVal = retVal + '?' + this.key;
+        }
+        if (this.key != null && (this.value != null || this.placeholder != null)){
             retVal += "=";
             if (this.value != null){
                 retVal += value;
@@ -111,6 +114,23 @@ public class ParsedUrl {
         } else if (!value.equals(other.value))
             return false;
         return true;
+    }
+
+    public boolean isExecutable() {
+        //resource mag nooit leeg zijn
+        if (StringUtils.isEmpty(this.resource)){
+            return false;
+        }
+        //key en value samen mogen leeg zijn
+        if (StringUtils.isEmpty(this.key) && StringUtils.isEmpty(this.value)){
+            return true;
+        }
+        //key en value mogen samen opgevuld zijn
+        if (!StringUtils.isEmpty(this.key) && !StringUtils.isEmpty(this.value)){
+            return true;
+        }
+        //de rest mag niet
+        return false;        
     }
     
     

@@ -2,6 +2,7 @@ package ca.uhn.fhir.federator;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import org.antlr.v4.runtime.ParserRuleContext;
 
@@ -23,7 +24,7 @@ public class ParsedUrlCreator {
         this.httpParam = (PContext)httpParam;
     }
 
-    public ParsedUrl createUrl() {
+    public Optional<ParsedUrl> createUrl() {
         ParserRuleContext parent = resourceCtx.getParent();
         String resource = ((FContext) resourceCtx).IDENTIFIER().getText();
         ParsedUrl url = null;
@@ -99,7 +100,7 @@ public class ParsedUrlCreator {
             }
             break;
           case "AContext":
-            
+              boolean skip = false;
               FhirUrlAnalyser c = new FhirUrlAnalyser();
               httpParam.accept(c);
               if (c.getResources().size() != 0 && c.getResources().get(0).size() > 0) {
@@ -115,8 +116,13 @@ public class ParsedUrlCreator {
                     } else {
                       source = ((PContext) httpParam).k().q().SPECIAL().getText();
                       if (source.equals("_revinclude")) {
-                        source = "_all";
-                        target = Arrays.asList("");
+                        source = null;
+                        target = null;
+                      }
+                      //TODO
+                      if (source.equals("_include")) {
+                        source = null;
+                        target = null;
                       }
                     }
     
@@ -140,12 +146,13 @@ public class ParsedUrlCreator {
               } else {
                 url = new ParsedUrl(resource, ((PContext) httpParam).k().getText(), ((PContext) httpParam).d().getText());
               }
+              if (skip) url = null;
             
             break;
     
           default:
         }
     
-        return url;
+        return Optional.ofNullable(url);
       }
 }

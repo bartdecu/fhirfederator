@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.antlr.v4.runtime.ParserRuleContext;
 
@@ -18,8 +19,16 @@ public class FhirUrlAnalyser extends FhirUrlBaseVisitor<Object> {
     private final List<List<ParserRuleContext>> resources = new ArrayList<>();
     private   List<ParserRuleContext> httpParams = new ArrayList<>();
     private final Map<ParserRuleContext,Integer> toIndex = new HashMap<>();
+
+    public List<ParserRuleContext> getAndParameters(){
+        return httpParams.stream().filter(p -> ((PContext)p).k().q() == null).collect(Collectors.toList());
+    }
+
+    public List<ParserRuleContext> getIncludeParameters(){
+        return httpParams.stream().filter(p -> ((PContext)p).k().q()!= null && ("_include".equals(((PContext)p).k().q().SPECIAL().getText())||"_revinclude".equals(((PContext)p).k().q().SPECIAL().getText()))).collect(Collectors.toList());
+    }
             
-        public List<List<ParserRuleContext>> getResources() {
+    public List<List<ParserRuleContext>> getResources() {
         return resources;
     }
 
