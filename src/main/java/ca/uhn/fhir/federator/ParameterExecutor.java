@@ -17,6 +17,7 @@ import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Bundle.BundleLinkComponent;
 import org.hl7.fhir.r4.model.Identifier;
+import org.hl7.fhir.r4.model.Reference;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.fhirpath.IFhirPath;
@@ -46,23 +47,13 @@ public class ParameterExecutor {
 
             ParsedUrl url = urlsPerParameter.get(i);
             String resource = url.getResource();
+            resourceCachePerParameter.put(resource, new ArrayList<>());
             List<ParsedUrl> executableUrls = createExecutableUrl(url);
             for (ParsedUrl executableUrl : executableUrls) {
-                List<IBaseResource> result = null;
-                if (!executableUrl.isExecutable()) {
-                    result = Collections.emptyList();
-                } else {
-                    List<ResourceConfig> servers = rr.getServer4Resource(resource);
-                    Stream<ResourceConfig> stream = servers.parallelStream();
-                    result = stream.flatMap(resourceConfig -> {
-
-                        IGenericClient client = cr.getClient(resourceConfig.getServer());
-                        String completeUrl;
-                        completeUrl = resourceConfig.getServer() + "/" + executableUrl.toString();
-                        ourLog.info("Client request Url: {}", completeUrl);
-                        return getResultsForURL(client, completeUrl).stream();
-                    }).collect(Collectors.<IBaseResource>toList());
-                }
+                List<ResourceConfig> servers = rr.getServer4Resource(resource);
+                Stream<ResourceConfig> stream = servers.parallelStream();
+                List<IBaseResource> result = stream.flatMap(resourceConfig -> executeUrl(executableUrl, resourceConfig))
+                        .collect(Collectors.<IBaseResource>toList());
                 List<IBaseResource> list = resourceCachePerParameter.get(resource);
                 if (list == null || list.isEmpty()) {
                     resourceCachePerParameter.put(resource, result);
@@ -78,16 +69,28 @@ public class ParameterExecutor {
 
     }
 
+    private Stream<? extends IBaseResource> executeUrl(ParsedUrl executableUrl, ResourceConfig resourceConfig) {
+        if (!executableUrl.isExecutable()) {
+            return Stream.empty();
+        } else {
+            IGenericClient client = cr.getClient(resourceConfig.getServer());
+            String completeUrl;
+            completeUrl = resourceConfig.getServer() + "/" + executableUrl.toString();
+            ourLog.info("Client request Url: {}", completeUrl);
+            return getResultsForURL(client, completeUrl).stream();
+        }
+    }
+
     public List<ParsedUrl> createExecutableUrl(ParsedUrl url) {
         List<ParsedUrl> retVal = new ArrayList<>();
         List<String> resources = Arrays.asList(url.getResource());
         if (url.getResource() == null) {
             // _include case
             List<IBaseResource> list = resourceCachePerParameter.get(url.getPlaceholder().getKey());
-            DefaultMapEntry<String, List<String>> placeholder = url.getPlaceholder();
-            DefaultMapEntry<String, List<String>> mp = /*placeholder;*/new DefaultMapEntry<String, List<String>>(placeholder.getKey(),
-                    placeholder.getValue().stream().filter(x -> !"identifier".equals(x)).collect(Collectors.toList()));
-            resources = getResources(list, mp).stream().map(x -> x.getClass().getSimpleName()).distinct()
+            List<String> chainedSearchParams = url.getPlaceholder().getValue();
+            chainedSearchParams = trimIdentifierFromChainedSearchParameters(chainedSearchParams);
+            resources = getResources(list, chainedSearchParams).stream().map(x -> x.getClass().getSimpleName())
+                    .distinct()
                     .collect(Collectors.toList());
 
         }
@@ -121,9 +124,30 @@ public class ParameterExecutor {
         return retVal;
     }
 
+    private List<String> trimIdentifierFromChainedSearchParameters(List<String> chainedSearchParams) {
+        if ("identifier".equals(chainedSearchParams.get(chainedSearchParams.size() - 1))) {
+            chainedSearchParams = chainedSearchParams.subList(0, chainedSearchParams.size() - 1);
+        }
+        return chainedSearchParams;
+    }
+
     private List<String> getIdentifiersFromResources(List<IBaseResource> list,
             DefaultMapEntry<String, List<String>> placeholder) {
-        final List<IBase> toProcess = getResources(list, placeholder);
+        List<String> chainedSearchParams = placeholder.getValue();
+        chainedSearchParams = trimIdentifierFromChainedSearchParameters(chainedSearchParams);
+        List<IBase> toProcess = getResources(list, chainedSearchParams);
+        toProcess = toProcess.stream().flatMap(resource -> {
+            if (resource instanceof Reference){
+                Reference ref = (Reference) resource;
+                if (ref.getIdentifier()!=null){
+                    return Arrays.asList(ref.getIdentifier()).stream();
+                } else {
+                    return getResources(Arrays.asList((IBaseResource)resource), Arrays.asList("resolve()","identifier")).stream();
+                }
+            } else {
+                return getResources(Arrays.asList((IBaseResource)resource), Arrays.asList("identifier")).stream();
+            }
+        }).collect(Collectors.toList());
 
         List<String> identifiers = toProcess.stream()
                 .flatMap(x -> {
@@ -153,17 +177,17 @@ public class ParameterExecutor {
         return identifiers;
     }
 
-    private List<IBase> getResources(List<IBaseResource> list, DefaultMapEntry<String, List<String>> placeholder) {
+    private List<IBase> getResources(List<IBaseResource> list, List<String> chainedSearchParams) {
         final List<IBase> toProcess = new ArrayList<>(list);
         final List<IBase> nextRound = new ArrayList<>();
 
-        placeholder.getValue().forEach(searchParam -> {
+        chainedSearchParams.forEach(searchParam -> {
 
             toProcess.forEach(inputResource -> {
                 String resourceName = inputResource.getClass().getSimpleName();
                 List<IBase> outputs;
-                //IFhirPath fhirPath = ctx.newFhirPath();
-                IFhirPath fhirPath = new FhirPathR4WithResolver(ctx,cr,rr);
+                // IFhirPath fhirPath = ctx.newFhirPath();
+                IFhirPath fhirPath = new FhirPathR4WithResolver(ctx, cr, rr);
                 String fp = s2f.getFhirPath(resourceName, searchParam);
                 outputs = fhirPath.evaluate(inputResource, fp, IBase.class);
                 nextRound.addAll(outputs);

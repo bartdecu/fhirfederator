@@ -124,7 +124,7 @@ public class ParsedUrlCreator {
                 if (source.equals("_revinclude")) {
                   source = null;
                   target = null;
-                }
+                } else
                 // TODO
                 if (source.equals("_include")) {
                   source = null;
