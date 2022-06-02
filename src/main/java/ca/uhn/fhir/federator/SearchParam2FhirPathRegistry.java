@@ -6,6 +6,7 @@ import java.util.Map;
 public class SearchParam2FhirPathRegistry {
     Map<String, String> searchParam2FhirPath = new HashMap<>();
     public SearchParam2FhirPathRegistry(){
+        searchParam2FhirPath.put("resolve()","resolve()");
 
     }
 

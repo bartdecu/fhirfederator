@@ -31,6 +31,10 @@ public class ParsedUrl {
     public ParsedUrl(String resource, String technicalId) {
         this(resource, "_id",technicalId);
     }
+    public ParsedUrl(String resource) {
+        this.resource = resource;
+    }
+
     public String getResource() {
         return resource;
     }

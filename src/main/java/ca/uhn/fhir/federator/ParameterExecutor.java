@@ -136,18 +136,7 @@ public class ParameterExecutor {
         List<String> chainedSearchParams = placeholder.getValue();
         chainedSearchParams = trimIdentifierFromChainedSearchParameters(chainedSearchParams);
         List<IBase> toProcess = getResources(list, chainedSearchParams);
-        toProcess = toProcess.stream().flatMap(resource -> {
-            if (resource instanceof Reference){
-                Reference ref = (Reference) resource;
-                if (ref.getIdentifier()!=null){
-                    return Arrays.asList(ref.getIdentifier()).stream();
-                } else {
-                    return getResources(Arrays.asList((IBaseResource)resource), Arrays.asList("resolve()","identifier")).stream();
-                }
-            } else {
-                return getResources(Arrays.asList((IBaseResource)resource), Arrays.asList("identifier")).stream();
-            }
-        }).collect(Collectors.toList());
+        toProcess = toProcess.stream().flatMap(resource -> handleReferenceResource(resource)).collect(Collectors.toList());
 
         List<String> identifiers = toProcess.stream()
                 .flatMap(x -> {
@@ -175,6 +164,19 @@ public class ParameterExecutor {
 
                 .collect(Collectors.<String>toList());
         return identifiers;
+    }
+
+    private Stream<? extends IBase> handleReferenceResource(IBase resource) {
+        if (resource instanceof Reference){
+            Reference ref = (Reference) resource;
+            if (ref.getIdentifier()!=null && !ref.getIdentifier().isEmpty()){
+                return Arrays.asList(ref.getIdentifier()).stream();
+            } else {
+                return getResources(Arrays.asList((IBaseResource)resource), Arrays.asList("resolve()","identifier")).stream();
+            }
+        } else {
+            return getResources(Arrays.asList((IBaseResource)resource), Arrays.asList("identifier")).stream();
+        }
     }
 
     private List<IBase> getResources(List<IBaseResource> list, List<String> chainedSearchParams) {

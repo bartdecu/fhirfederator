@@ -45,7 +45,7 @@ public class ParsedUrlCreator {
           while (!(ref instanceof SContext)) {
             ref = ref.getParent();
           }
-          url = new ParsedUrl(resource, ((VContext) parent).e().IDENTIFIER().getText(),
+          url = new ParsedUrl(resource, ((VContext) parent).e().IDENTIFIER().getText()+".identifier",
               ((SContext) ref).a().f().IDENTIFIER().getText(), Arrays.asList("identifier"));
         } else {
           url = new ParsedUrl(resource, ((VContext) parent).i().IDENTIFIER().getText());
@@ -106,7 +106,7 @@ public class ParsedUrlCreator {
         }
         break;
       case "AContext":
-        boolean skip = false;
+        if (httpParam != null){
         FhirUrlAnalyser c = new FhirUrlAnalyser();
         httpParam.accept(c);
         if (c.getResources().size() != 0 && c.getResources().get(0).size() > 0) {
@@ -149,10 +149,13 @@ public class ParsedUrlCreator {
           url = new ParsedUrl(resource, source, ((FContext) c.getResources().get(0).get(0)).IDENTIFIER().getText(),
               target);
         } else {
-          url = new ParsedUrl(resource, ((PContext) httpParam).k().getText(), ((PContext) httpParam).d().getText());
+          String source = ((PContext) httpParam).k().getText();
+          url = new ParsedUrl(resource, source, ((PContext) httpParam).d().getText());
         }
-        if (skip)
-          url = null;
+      } else {
+        url = new ParsedUrl(parent.getText());
+      }
+        
 
         break;
 
