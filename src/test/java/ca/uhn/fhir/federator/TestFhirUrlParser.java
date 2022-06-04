@@ -68,7 +68,7 @@ public class TestFhirUrlParser {
 
     private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(TestFhirUrlParser.class);
 
-    @Test
+    @Ignore
     public void testExploratoryString() throws IOException {
 
         String simplestProgram = "Patient?_has:Observation:patient:_has:AuditEvent:entity:agent:Practitioner.name=janedoe";
@@ -83,7 +83,7 @@ public class TestFhirUrlParser {
 
     }
 
-    @Test
+    @Ignore
     public void testExploratoryString1() throws IOException {
 
         String simplestProgram = "DiagnosticReport?subject:Patient.name=Sarah";
@@ -97,7 +97,7 @@ public class TestFhirUrlParser {
 
     }
 
-    @Test
+    @Ignore
     public void testExploratoryString2() throws IOException {
 
         String simplestProgram = "Encounter?subject=Patient/78a14cbe-8968-49fd-a231-d43e6619399f";
@@ -111,7 +111,7 @@ public class TestFhirUrlParser {
 
     }
 
-    @Test
+    @Ignore
     public void testExploratoryString3() throws IOException {
 
         String simplestProgram = "Encounter?subject:Patient.birthdate=1987-02-20";
@@ -125,7 +125,7 @@ public class TestFhirUrlParser {
 
     }
 
-    @Test
+    @Ignore
     public void testExploratoryString4() throws IOException {
 
         String simplestProgram = "Patient?birthdate:missing=true";
@@ -139,7 +139,7 @@ public class TestFhirUrlParser {
 
     }
 
-    @Test
+    @Ignore
     public void testExploratoryString5() throws IOException {
 
         String simplestProgram = "Patient?general-practitioner:Practitioner.name=Sarah&general-practitioner:Practitioner.address-state=WA";
@@ -155,7 +155,7 @@ public class TestFhirUrlParser {
 
     }
 
-    @Test
+    @Ignore
     public void testExploratoryString6() throws IOException {
 
         String simplestProgram = "Patient?identifier=https://github.com/synthetichealth/synthea|621338a9-01f4-49d4-b852-14507a8bf8c7";
@@ -170,7 +170,7 @@ public class TestFhirUrlParser {
 
     }
 
-    @Test
+    @Ignore
     public void testExploratoryString7() throws IOException {
 
         String simplestProgram = "Patient?name=Sarah&name=Jones";
@@ -185,7 +185,7 @@ public class TestFhirUrlParser {
 
     }
 
-    @Test
+    @Ignore
     public void testExploratoryString8() throws IOException {
 
         String simplestProgram = "Observation?subject.identifier=urn:oid:1.2.36.146.595.217.0.1|12345";
@@ -200,7 +200,7 @@ public class TestFhirUrlParser {
 
     }
 
-    @Test
+    @Ignore
     public void testExploratoryString9() throws IOException {
 
         String simplestProgram = "Encounter?_id=1";
@@ -217,7 +217,7 @@ public class TestFhirUrlParser {
 
     
 
-    @Test
+    @Ignore
     public void testExploratoryString10() throws IOException {
 
         String simplestProgram = "Observation?subject:Patient.name=Hodges&code=http://loinc.org|29463-7";
@@ -236,7 +236,7 @@ public class TestFhirUrlParser {
     
 
     // TODO _include and _revinclude are todo
-    @Test
+    @Ignore
     public void testRevInclude() throws IOException {
 
         String simplestProgram = "Patient?_revinclude=Encounter:subject";
@@ -252,6 +252,23 @@ public class TestFhirUrlParser {
 
 
     @Test
+    public void testInclude2() throws IOException {
+
+        String simplestProgram = "Patient?_revinclude=EpisodeOfCare:patient";
+
+        List<List<String>> actual = toUrls(simplestProgram);
+        System.out.println(actual);
+
+        List<List<String>> expected = Arrays.asList(Arrays.asList("Patient"),Arrays.asList("EpisodeOfCare?patient.identifier={Patient.identifier}"));
+
+        Assert.assertEquals(expected, actual);
+
+    }
+
+    
+
+
+    @Ignore
     public void testRevInclude1() throws IOException {
 
         String simplestProgram = "Patient?name=Hodges&_revinclude=Encounter:subject";
@@ -265,7 +282,7 @@ public class TestFhirUrlParser {
 
     }
 
-    @Test
+    @Ignore
     public void testRevInclude2() throws IOException {
 
         String simplestProgram = "Patient?_revinclude=Encounter:subject&identifier=http://hl7.org/fhir/sid/us-ssn|999622736";
@@ -279,7 +296,7 @@ public class TestFhirUrlParser {
 
     }
 
-    @Test
+    @Ignore
     public void testInclude() throws IOException {
 
         String simplestProgram = "MedicationRequest?_include=MedicationRequest:patient";
