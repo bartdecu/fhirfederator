@@ -10,10 +10,10 @@ import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 
 public class ClientRegistry {
-    private FhirContext ctx = FhirContext.forR4();
+    
     private Map<String,IGenericClient> map = new LinkedHashMap<>();
 
-    public ClientRegistry(List<String> bases){
+    public ClientRegistry(List<String> bases, FhirContext ctx){
 
         bases.stream().forEach(base -> map.put(base,ctx.newRestfulGenericClient(base) ));
 
