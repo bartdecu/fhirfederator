@@ -20,6 +20,12 @@ public class FederatorInterceptor {
     @Hook(Pointcut.SERVER_INCOMING_REQUEST_PRE_HANDLER_SELECTED)
     public void doFederation2(HttpServletRequest theServletRequest, HttpServletResponse theServletResponse,
             RequestDetails theRequestDetails, ServletRequestDetails theServletRequestDetails) throws ServletException {
+        // add list of parameters to do nothing
+        // _getpages, _getpagesoffset
+        if (theRequestDetails.getParameters().get(Constants.PARAM_PAGINGACTION) != null) {
+            return;
+        }
+
         theRequestDetails.setOperation("$doFederation");
         theRequestDetails.setResource(null);
         theRequestDetails.setResourceName(null);
