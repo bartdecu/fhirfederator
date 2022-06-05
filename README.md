@@ -13,4 +13,4 @@ These features are supported:
 There are many features and configuration options to add...
 if you want to contribute to the functional specs of this server, please add your questions here: __https://docs.google.com/document/d/1l9ioxTjjpgxCLXGkgLkw3_Qlvh8Tc9E6GalX9XMzgBE/edit?usp=sharing__
 
-Configuration is now done in __https://github.com/bartdecu/fhirfederator/blob/main/resources/federator.yaml__
+Configuration is now done in __https://github.com/bartdecu/fhirfederator/blob/main/resources/application.yml__
