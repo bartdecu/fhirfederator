@@ -1,0 +1,19 @@
+server:
+  port: 8081
+federator:
+  my: 'ffff'
+  searchParams:
+    identifier: identifier
+    AuditEvent:
+      entity: AuditEvent.entity.what.resolve()
+    MedicationRequest:
+      patient: MedicationRequest.subject.resolve()
+  setup:
+    url: https://server.fire.ly/R4
+  clients:
+    - 'url=https://server.fire.ly/R4'
+    - 'url=https://blaze.life.uni-leipzig.de/fhir'
+    - 'url=https://hapi.fhir.org/baseR4'
+  resources:
+    default: '{url=https://server.fire.ly/R4}, {url=https://blaze.life.uni-leipzig.de/fhir},
+      {url=https://hapi.fhir.org/baseR4}'

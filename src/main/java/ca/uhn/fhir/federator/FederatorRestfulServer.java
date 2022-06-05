@@ -12,13 +12,15 @@ import org.apache.commons.collections4.keyvalue.DefaultKeyValue;
 import org.hl7.fhir.instance.model.api.IBaseBundle;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.SearchParameter;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import org.yaml.snakeyaml.Yaml;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.server.RestfulServer;
 import ca.uhn.fhir.rest.server.interceptor.ResponseHighlighterInterceptor;
 
-@WebServlet("/*")
+@Service
 public class FederatorRestfulServer extends RestfulServer {
 
 	@Override
