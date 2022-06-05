@@ -22,6 +22,7 @@ import org.hl7.fhir.r4.model.Reference;
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.fhirpath.IFhirPath;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
+import ca.uhn.fhir.federator.FederatorProperties.ResourceConfig;
 
 public class ParameterExecutor {
     private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(ParameterExecutor.class);
