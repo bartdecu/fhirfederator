@@ -43,9 +43,8 @@ public class ParameterNode implements Node {
 
     public IBundleProvider executeWithReference(IBundleProvider reference) {
         parameterExecutor = new ParameterExecutor(parsedUrls, rr, cr, ctx, s2f);
-        Map<String, List<IBaseResource>> resourceCachePerParameter = new HashMap<>();
         List<IBaseResource> resources = reference.getAllResources();
-        resources.stream()
+        Map<String, List<IBaseResource>> resourceCachePerParameter = resources.stream()
                 .collect(Collectors.groupingBy(x -> x.getClass().getSimpleName(), HashMap::new, Collectors.toList()));
         parameterExecutor.setCachedResources(resourceCachePerParameter);
         List<IBaseResource> parameterResources = parameterExecutor.execute();

@@ -1,5 +1,6 @@
 package ca.uhn.fhir.federator;
 
+import java.io.File;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -76,19 +77,22 @@ public class FederatorRestfulServer extends RestfulServer {
 			}
 		}
 		/*
-		Map<String, Object> searchParams = (Map<String, Object>) config.get("searchParams");
-		if (searchParams == null) {
-			throw new RuntimeException("No searchParams in federator.yaml");
-		}
-		List<DefaultKeyValue<String, String>> searchParamsFhirPath = new ArrayList<>();
-		for (String searchParam : searchParams.keySet()) {
-			searchParamsFhirPath.add(new DefaultKeyValue<>(searchParam, (String) searchParams.get(searchParam)));
-		}
-		*/
+		 * Map<String, Object> searchParams = (Map<String, Object>)
+		 * config.get("searchParams");
+		 * if (searchParams == null) {
+		 * throw new RuntimeException("No searchParams in federator.yaml");
+		 * }
+		 * List<DefaultKeyValue<String, String>> searchParamsFhirPath = new
+		 * ArrayList<>();
+		 * for (String searchParam : searchParams.keySet()) {
+		 * searchParamsFhirPath.add(new DefaultKeyValue<>(searchParam, (String)
+		 * searchParams.get(searchParam)));
+		 * }
+		 */
 
 		// Create a context for the appropriate version
 		setFhirContext(FhirContext.forR4());
-		ClientRegistry cr = new ClientRegistry(clientUrls);
+		ClientRegistry cr = new ClientRegistry(clientUrls, this.getFhirContext());
 		ResourceRegistry rr = new ResourceRegistry(defaultUrls);
 		for (DefaultKeyValue<String, List<ResourceConfig>> resourceUrl : resourceUrls) {
 			for (ResourceConfig resourceConfig : resourceUrl.getValue()) {
@@ -98,10 +102,11 @@ public class FederatorRestfulServer extends RestfulServer {
 		}
 		SearchParam2FhirPathRegistry s2f = new SearchParam2FhirPathRegistry();
 		/*
-		for (DefaultKeyValue<String, String> searchParamFhirPath : searchParamsFhirPath) {
-			s2f.put(searchParamFhirPath.getKey(), searchParamFhirPath.getValue());
-		}
-		*/
+		 * for (DefaultKeyValue<String, String> searchParamFhirPath :
+		 * searchParamsFhirPath) {
+		 * s2f.put(searchParamFhirPath.getKey(), searchParamFhirPath.getValue());
+		 * }
+		 */
 		String url = setupUrl + "/SearchParameter";
 		do {
 			Bundle searchParameters = cr.getClient(setupUrl).search().byUrl(url).returnBundle(Bundle.class).execute();
@@ -115,7 +120,10 @@ public class FederatorRestfulServer extends RestfulServer {
 			url = searchParameters.getLink(IBaseBundle.LINK_NEXT) == null ? null
 					: searchParameters.getLink(IBaseBundle.LINK_NEXT).getUrl();
 		} while (url != null);
+
 		registerProvider(new FederatedSearchProvider(cr, rr, this.getFhirContext(), s2f));
+		setPagingProvider(new MapDbPagingProvider(this.getFhirContext(),
+				new File(System.getProperty("java.io.tmpdir") + File.separator + "paging.db"), 10, 100));
 		registerInterceptor(new FederatorInterceptor());
 		registerInterceptor(new ResponseHighlighterInterceptor());
 	}

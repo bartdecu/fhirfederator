@@ -89,7 +89,7 @@ public class ParameterExecutor {
             List<IBaseResource> list = resourceCachePerParameter.get(url.getPlaceholder().getKey());
             List<String> chainedSearchParams = url.getPlaceholder().getValue();
             chainedSearchParams = trimIdentifierFromChainedSearchParameters(chainedSearchParams);
-            resources = getResources(list, chainedSearchParams).stream().map(x -> x.getClass().getSimpleName())
+            resources = getResources(list.stream().map(x -> (IBase)x).collect(Collectors.toList()), chainedSearchParams).stream().map(x -> x.getClass().getSimpleName())
                     .distinct()
                     .collect(Collectors.toList());
 
@@ -135,7 +135,7 @@ public class ParameterExecutor {
             DefaultMapEntry<String, List<String>> placeholder) {
         List<String> chainedSearchParams = placeholder.getValue();
         chainedSearchParams = trimIdentifierFromChainedSearchParameters(chainedSearchParams);
-        List<IBase> toProcess = getResources(list, chainedSearchParams);
+        List<IBase> toProcess = getResources(list.stream().map(x -> (IBase)x).collect(Collectors.toList()), chainedSearchParams);
         toProcess = toProcess.stream().flatMap(resource -> handleReferenceResource(resource)).collect(Collectors.toList());
 
         List<String> identifiers = toProcess.stream()
@@ -172,14 +172,14 @@ public class ParameterExecutor {
             if (ref.getIdentifier()!=null && !ref.getIdentifier().isEmpty()){
                 return Arrays.asList(ref.getIdentifier()).stream();
             } else {
-                return getResources(Arrays.asList((IBaseResource)resource), Arrays.asList("resolve()","identifier")).stream();
+                return getResources(Arrays.asList(resource), Arrays.asList("resolve()","identifier")).stream();
             }
         } else {
-            return getResources(Arrays.asList((IBaseResource)resource), Arrays.asList("identifier")).stream();
+            return getResources(Arrays.asList(resource), Arrays.asList("identifier")).stream();
         }
     }
 
-    private List<IBase> getResources(List<IBaseResource> list, List<String> chainedSearchParams) {
+    private List<IBase> getResources(List<IBase> list, List<String> chainedSearchParams) {
         final List<IBase> toProcess = new ArrayList<>(list);
         final List<IBase> nextRound = new ArrayList<>();
 
