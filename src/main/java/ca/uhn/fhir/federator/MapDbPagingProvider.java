@@ -73,7 +73,7 @@ public class MapDbPagingProvider implements IPagingProvider {
                 .make();
         map = db
                 .hashMap("paging", Serializer.STRING, new ListIBaseResourceSerializer(ctx))
-                .create();
+                .createOrOpen();
 
     }
 
@@ -98,6 +98,7 @@ public class MapDbPagingProvider implements IPagingProvider {
         UUID uuid = UUID.randomUUID();
         String id = uuid.toString();
         map.put(id, theList.getAllResources());
+        db.close();
         return id;
     }
 

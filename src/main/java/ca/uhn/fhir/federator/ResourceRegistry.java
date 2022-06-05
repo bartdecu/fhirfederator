@@ -1,13 +1,14 @@
 package ca.uhn.fhir.federator;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.util.comparator.Comparators;
+
+import ca.uhn.fhir.federator.FederatorProperties.ResourceConfig;
 
 public class ResourceRegistry {
     
