@@ -275,7 +275,7 @@ public class TestFhirUrlParser {
                 Arrays.asList("null?identifier={MedicationDispense.prescription.identifier}"),
                 Arrays.asList("null?identifier={MedicationRequest.performer.identifier}"));
 
-        Assert.assertEquals(expected, actual);
+        assertEquals(expected, actual);
 
     }
 
@@ -336,7 +336,7 @@ public class TestFhirUrlParser {
         List<List<String>> expected = Arrays.asList(Arrays.asList("MedicationRequest"),
                 Arrays.asList("Patient?identifier={MedicationRequest.patient.identifier}"));
 
-        Assert.assertEquals(expected, actual);
+        assertEquals(expected, actual);
 
     }
 
