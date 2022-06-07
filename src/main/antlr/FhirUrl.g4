@@ -11,9 +11,9 @@ s : a QM c | a ;
 a : f SLASH o | f SLASH i SLASH o | f | o ;
 c : c AMP p | p ;
 p : k EQ d;
-k : q | e COLON r | h | e COLON u | e DOT t | e;
+k : q COLON u | q | e COLON r | h | e COLON u | e DOT t | e;
 d : d COMMA v | v ;
-v : f SLASH i | w | f COLON e;
+v : f SLASH i | w | f COLON e | f COLON e COLON b;
 q : SPECIAL;
 e : IDENTIFIER;
 r : f DOT t;
@@ -27,6 +27,7 @@ l : IDENTIFIER;
 m : h | e COLON r | e;
 o : OPERATOR;
 u : IDENTIFIER;
+b : IDENTIFIER;
 w : IDENTIFIER | URL PIPE IDENTIFIER | URN PIPE IDENTIFIER;
 
 

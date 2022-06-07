@@ -10,15 +10,37 @@ public class ParsedUrl {
     String key;
     String value;
     DefaultMapEntry<String, List<String>> placeholder;
+    private boolean iterate;
+    public boolean isIterate() {
+        return iterate;
+    }
+
+    public void setIterate(boolean iterate) {
+        this.iterate = iterate;
+    }
+
     public ParsedUrl(String resource, String key, String value) {
-        this(resource, key, value, null, null);
+        this(false, resource, key, value, null, null);
     }
     
     public ParsedUrl(String resource, String key, String placeholderResource, List<String> placeholderKey) {
-        this(resource, key, null, placeholderResource, placeholderKey);
+        this(false, resource, key, null, placeholderResource, placeholderKey);
     }
 
-    private  ParsedUrl(String resource, String key, String value, String placeholderResource, List<String> placeholderKey) {
+    public ParsedUrl(boolean iterate, String resource, String key, String placeholderResource, List<String> placeholderKey) {
+        this(iterate, resource, key, null, placeholderResource, placeholderKey);
+    }
+
+    
+    public ParsedUrl(String resource, String technicalId) {
+        this(resource, "_id",technicalId);
+    }
+    public ParsedUrl(String resource) {
+        this.resource = resource;
+    }
+
+    private ParsedUrl(boolean iterate, String resource, String key, String value, String placeholderResource, List<String> placeholderKey) {
+        this.iterate = iterate;
         this.resource = resource;
         this.key = key;
         this.value = value;
@@ -27,12 +49,6 @@ public class ParsedUrl {
         } else {
         this.placeholder = new DefaultMapEntry<String,List<String>>(placeholderResource, placeholderKey);
         }
-    }
-    public ParsedUrl(String resource, String technicalId) {
-        this(resource, "_id",technicalId);
-    }
-    public ParsedUrl(String resource) {
-        this.resource = resource;
     }
 
     public String getResource() {

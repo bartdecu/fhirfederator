@@ -2,6 +2,7 @@ package ca.uhn.fhir.federator;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -61,19 +62,18 @@ public class MapDbPagingProvider implements IPagingProvider {
 
     private int defaultPageSize;
     private int maximumPageSize;
-    private Map<String, List<IBaseResource>> map;
     private DB db;
+    private FhirContext ctx;
 
     public MapDbPagingProvider(FhirContext ctx, File file, int defaultPageSize, int maximumPageSize) {
         this.defaultPageSize = defaultPageSize;
         this.maximumPageSize = maximumPageSize;
+        this.ctx = ctx;
         db = DBMaker
                 .fileDB(file.getAbsolutePath())
                 .fileMmapEnable()
                 .make();
-        map = db
-                .hashMap("paging", Serializer.STRING, new ListIBaseResourceSerializer(ctx))
-                .createOrOpen();
+                
 
     }
 
@@ -90,15 +90,23 @@ public class MapDbPagingProvider implements IPagingProvider {
 
     @Override
     public IBundleProvider retrieveResultList(RequestDetails theRequestDetails, String theSearchId) {
-        return new SimpleBundleProvider(map.get(theSearchId));
+        Map<String, List<IBaseResource>> map = db
+                .hashMap("paging", Serializer.STRING, new ListIBaseResourceSerializer(ctx))
+                .createOrOpen();
+        SimpleBundleProvider retVal = new SimpleBundleProvider(map.getOrDefault(theSearchId, Collections.emptyList()));
+        //db.close();
+        return retVal;
     }
 
     @Override
     public String storeResultList(RequestDetails theRequestDetails, IBundleProvider theList) {
+        Map<String, List<IBaseResource>> map = db
+                .hashMap("paging", Serializer.STRING, new ListIBaseResourceSerializer(ctx))
+                .createOrOpen();
         UUID uuid = UUID.randomUUID();
         String id = uuid.toString();
         map.put(id, theList.getAllResources());
-        db.close();
+        //db.close();
         return id;
     }
 

@@ -24,6 +24,7 @@ public class ParameterNode implements Node {
     private ClientRegistry cr;
     private FhirContext ctx;
     private SearchParam2FhirPathRegistry s2f;
+    private boolean iterate;
 
     public ParameterNode(List<ParsedUrl> parsedUrls, ResourceRegistry rr,
             ClientRegistry cr, FhirContext ctx, SearchParam2FhirPathRegistry s2f) {
@@ -32,23 +33,29 @@ public class ParameterNode implements Node {
         this.cr = cr;
         this.ctx = ctx;
         this.s2f = s2f;
+        this.iterate = parsedUrls.stream().anyMatch(x -> x.isIterate());
     }
 
     @Override
     public IBundleProvider execute() {
-        parameterExecutor = new ParameterExecutor(parsedUrls, rr, cr, ctx, s2f);
-        List<IBaseResource> parameterResources = parameterExecutor.execute();
-        return new SimpleBundleProvider(parameterResources);
+        return executeWithReference(null);
     }
 
     public IBundleProvider executeWithReference(IBundleProvider reference) {
         parameterExecutor = new ParameterExecutor(parsedUrls, rr, cr, ctx, s2f);
-        List<IBaseResource> resources = reference.getAllResources();
-        Map<String, List<IBaseResource>> resourceCachePerParameter = resources.stream()
-                .collect(Collectors.groupingBy(x -> x.getClass().getSimpleName(), HashMap::new, Collectors.toList()));
-        parameterExecutor.setCachedResources(resourceCachePerParameter);
+        if (reference != null) {
+            List<IBaseResource> resources = reference.getAllResources();
+            Map<String, List<IBaseResource>> resourceCachePerParameter = resources.stream()
+                    .collect(Collectors.groupingBy(x -> x.getClass().getSimpleName(), HashMap::new,
+                            Collectors.toList()));
+            parameterExecutor.setCachedResources(resourceCachePerParameter);
+        }
         List<IBaseResource> parameterResources = parameterExecutor.execute();
         return new SimpleBundleProvider(parameterResources);
+    }
+
+    public boolean isIterate(){
+        return iterate;
     }
 
 }

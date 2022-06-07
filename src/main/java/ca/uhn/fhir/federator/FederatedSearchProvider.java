@@ -2,6 +2,7 @@ package ca.uhn.fhir.federator;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -166,7 +167,7 @@ public class FederatedSearchProvider {
 
     List<Node> perParameter = visitor.getAndParameters()
         .stream()
-        .map(httpParam -> createPartialUrls(httpParam, visitor))
+        .map(httpParam -> createPartialUrls(false, httpParam, visitor))
         .map(partialUrls -> new ParameterNode(partialUrls, rr, cr, ctx, s2f))
         .collect(Collectors.toList());
 
@@ -174,18 +175,21 @@ public class FederatedSearchProvider {
 
     List<ParameterNode> perIncludeParameter = visitor.getIncludeParameters()
         .stream()
-        .map(httpParam -> createPartialUrls(httpParam, visitor))
+        .map(httpParam -> createPartialUrls(true, httpParam, visitor))
         .map(partialUrls -> new ParameterNode(partialUrls, rr, cr, ctx, s2f))
         .collect(Collectors.toList());
 
-    IncludeNode include = new IncludeNode(and, perIncludeParameter);
+    List<Node> chain = new ArrayList<>();
+    chain.add(and);
+    chain.addAll(perIncludeParameter);
+    Node include = chain.stream().reduce((a, b) -> new IncludeNode(a, (ParameterNode) b)).get();
 
     return include;
 
   }
 
-  private List<ParsedUrl> createPartialUrls(ParserRuleContext httpParam, FhirUrlAnalyser visitor) {
-    return visitor.getResourcesForHttpParam(httpParam).stream()
+  private List<ParsedUrl> createPartialUrls(boolean dependent,ParserRuleContext httpParam, FhirUrlAnalyser visitor) {
+    return visitor.getResourcesForHttpParam(dependent, httpParam).stream()
         .map(resourceInParam -> new ParsedUrlCreator(resourceInParam, httpParam).createUrl())
         .flatMap(opt -> opt.isPresent() ? Arrays.<ParsedUrl>asList(opt.get()).stream() : Stream.<ParsedUrl>empty())
         .collect(Collectors.toList());
