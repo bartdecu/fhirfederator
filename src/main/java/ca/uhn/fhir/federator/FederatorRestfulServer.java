@@ -1,38 +1,26 @@
 package ca.uhn.fhir.federator;
 
-import java.io.File;
-import java.util.List;
-import java.util.Map.Entry;
-import java.util.stream.Collectors;
-
-import javax.servlet.ServletException;
-
-import org.hl7.fhir.instance.model.api.IBaseBundle;
-import org.hl7.fhir.r4.model.Bundle;
-import org.hl7.fhir.r4.model.SearchParameter;
-
-import org.springframework.stereotype.Service;
-
-
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.federator.FederatorProperties.ResourceConfig;
 import ca.uhn.fhir.rest.server.RestfulServer;
 import ca.uhn.fhir.rest.server.interceptor.ResponseHighlighterInterceptor;
+import java.io.File;
+import java.util.List;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
+import org.hl7.fhir.instance.model.api.IBaseBundle;
+import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.SearchParameter;
+import org.springframework.stereotype.Service;
 
 @Service
 public class FederatorRestfulServer extends RestfulServer {
-	
 
-	private FederatorProperties configuration;
+
+	private final FederatorProperties configuration;
 
 	public FederatorRestfulServer(FederatorProperties configuration) {
 		this.configuration = configuration;
-    }
-
-    @Override
-	@SuppressWarnings("unchecked")
-	protected void initialize() throws ServletException {
-
 
 		// Create a context for the appropriate version
 		setFhirContext(FhirContext.forR4());
@@ -45,7 +33,7 @@ public class FederatorRestfulServer extends RestfulServer {
 
 		}
 		SearchParam2FhirPathRegistry s2f = new SearchParam2FhirPathRegistry();
-		
+
 		String url = configuration.getSetup().getUrl() + "/SearchParameter";
 		do {
 			Bundle searchParameters = cr.getClient(configuration.getSetup().getUrl()).search().byUrl(url).returnBundle(Bundle.class).execute();
