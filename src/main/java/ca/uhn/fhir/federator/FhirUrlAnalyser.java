@@ -42,7 +42,7 @@ public class FhirUrlAnalyser extends FhirUrlBaseVisitor<Object> {
         return resources;
     }
 
-    public List<ParserRuleContext> getResourcesForHttpParam(ParserRuleContext httpParam) {
+    public List<ParserRuleContext> getResourcesForHttpParam(boolean dependent, ParserRuleContext httpParam) {
         List<ParserRuleContext> retVal;
         if (httpParam == null) {
             retVal = new ArrayList<>(resources.get(0));
@@ -51,7 +51,10 @@ public class FhirUrlAnalyser extends FhirUrlBaseVisitor<Object> {
             if (index == null) {
                 retVal = Collections.emptyList();
             } else {
-                retVal = new ArrayList<>(resources.get(0));
+                retVal = new ArrayList<>();
+                if (!dependent){
+                    retVal.addAll(resources.get(0));
+                }
                 retVal.addAll(resources.get(toIndex.get(httpParam)));
 
             }

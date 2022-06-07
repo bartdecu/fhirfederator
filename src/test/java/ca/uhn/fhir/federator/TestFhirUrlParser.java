@@ -89,8 +89,9 @@ public class TestFhirUrlParser {
 
         List<List<String>> actual = toUrls(simplestProgram);
 
-        List<List<String>> expected = Arrays.asList(Arrays.asList("DiagnosticReport?subject.identifier={Patient.identifier}",
-                "Patient?name=Sarah"));
+        List<List<String>> expected = Arrays
+                .asList(Arrays.asList("DiagnosticReport?subject.identifier={Patient.identifier}",
+                        "Patient?name=Sarah"));
 
         assertEquals(expected, actual);
 
@@ -117,7 +118,7 @@ public class TestFhirUrlParser {
 
         List<List<String>> actual = toUrls(simplestProgram);
 
-        List<List<String>> expected =Arrays.asList(Arrays.asList("Encounter?subject.identifier={Patient.identifier}",
+        List<List<String>> expected = Arrays.asList(Arrays.asList("Encounter?subject.identifier={Patient.identifier}",
                 "Patient?birthdate=1987-02-20"));
 
         assertEquals(expected, actual);
@@ -146,9 +147,11 @@ public class TestFhirUrlParser {
         List<List<String>> actual = toUrls(simplestProgram);
         System.out.println(actual);
 
-        List<List<String>> expected = Arrays.asList( Arrays.asList("Patient?general-practitioner.identifier={Practitioner.identifier}",
-                "Practitioner?name=Sarah"),Arrays.asList("Patient?general-practitioner.identifier={Practitioner.identifier}",
-                "Practitioner?address-state=WA"));
+        List<List<String>> expected = Arrays.asList(
+                Arrays.asList("Patient?general-practitioner.identifier={Practitioner.identifier}",
+                        "Practitioner?name=Sarah"),
+                Arrays.asList("Patient?general-practitioner.identifier={Practitioner.identifier}",
+                        "Practitioner?address-state=WA"));
 
         assertEquals(expected, actual);
 
@@ -178,7 +181,7 @@ public class TestFhirUrlParser {
         System.out.println(actual);
 
         List<List<String>> expected = Arrays.asList(Arrays.asList(
-                "Patient?name=Sarah"),Arrays.asList( "Patient?name=Jones"));
+                "Patient?name=Sarah"), Arrays.asList("Patient?name=Jones"));
 
         assertEquals(expected, actual);
 
@@ -214,8 +217,6 @@ public class TestFhirUrlParser {
 
     }
 
-    
-
     @Disabled
     public void testExploratoryString10() throws IOException {
 
@@ -225,16 +226,13 @@ public class TestFhirUrlParser {
         System.out.println(actual);
 
         List<List<String>> expected = Arrays.asList(Arrays.asList(
-            "Observation?subject.identifier={Patient.identifier}", "Patient?name=Hodges"), Arrays.asList( "Observation?code=http://loinc.org|29463-7"));
+                "Observation?subject.identifier={Patient.identifier}", "Patient?name=Hodges"),
+                Arrays.asList("Observation?code=http://loinc.org|29463-7"));
 
         assertEquals(expected, actual);
 
     }
 
-
-    
-
-    // TODO _include and _revinclude are todo
     @Disabled
     public void testRevInclude() throws IOException {
 
@@ -243,12 +241,12 @@ public class TestFhirUrlParser {
         List<List<String>> actual = toUrls(simplestProgram);
         System.out.println(actual);
 
-        List<List<String>> expected = Arrays.asList(Arrays.asList("Patient"),Arrays.asList("Encounter?subject.identifier={Patient.identifier}"));
+        List<List<String>> expected = Arrays.asList(Arrays.asList("Patient"),
+                Arrays.asList("Encounter?subject.identifier={Patient.identifier}"));
 
         assertEquals(expected, actual);
 
     }
-
 
     @Test
     public void testInclude2() throws IOException {
@@ -258,14 +256,28 @@ public class TestFhirUrlParser {
         List<List<String>> actual = toUrls(simplestProgram);
         System.out.println(actual);
 
-        List<List<String>> expected = Arrays.asList(Arrays.asList("Patient"),Arrays.asList("EpisodeOfCare?patient.identifier={Patient.identifier}"));
+        List<List<String>> expected = Arrays.asList(Arrays.asList("Patient"),
+                Arrays.asList("EpisodeOfCare?patient.identifier={Patient.identifier}"));
 
         assertEquals(expected, actual);
 
     }
 
-    
+    @Test
+    public void testIterate() throws IOException {
 
+        String simplestProgram = "MedicationDispense?_include=MedicationDispense:prescription&_include:iterate=MedicationRequest:performer";
+
+        List<List<String>> actual = toUrls(simplestProgram);
+        System.out.println(actual);
+
+        List<List<String>> expected = Arrays.asList(Arrays.asList("MedicationDispense"),
+                Arrays.asList("null?identifier={MedicationDispense.prescription.identifier}"),
+                Arrays.asList("null?identifier={MedicationRequest.performer.identifier}"));
+
+        Assert.assertEquals(expected, actual);
+
+    }
 
     @Disabled
     public void testRevInclude1() throws IOException {
@@ -275,7 +287,8 @@ public class TestFhirUrlParser {
         List<List<String>> actual = toUrls(simplestProgram);
         System.out.println(actual);
 
-        List<List<String>> expected = Arrays.asList(Arrays.asList("Patient?name=Hodges"),Arrays.asList("Encounter?subject.identifier={Patient.identifier}"));
+        List<List<String>> expected = Arrays.asList(Arrays.asList("Patient?name=Hodges"),
+                Arrays.asList("Encounter?subject.identifier={Patient.identifier}"));
 
         assertEquals(expected, actual);
 
@@ -289,7 +302,9 @@ public class TestFhirUrlParser {
         List<List<String>> actual = toUrls(simplestProgram);
         System.out.println(actual);
 
-        List<List<String>> expected = Arrays.asList(Arrays.asList("Patient?identifier=http://hl7.org/fhir/sid/us-ssn|999622736"),Arrays.asList("Encounter?subject.identifier={Patient.identifier}"));
+        List<List<String>> expected = Arrays.asList(
+                Arrays.asList("Patient?identifier=http://hl7.org/fhir/sid/us-ssn|999622736"),
+                Arrays.asList("Encounter?subject.identifier={Patient.identifier}"));
 
         assertEquals(expected, actual);
 
@@ -303,48 +318,55 @@ public class TestFhirUrlParser {
         List<List<String>> actual = toUrls(simplestProgram);
         System.out.println(actual);
 
-        List<List<String>> expected = Arrays.asList(Arrays.asList("MedicationRequest"),Arrays.asList("null?identifier={MedicationRequest.patient.identifier}"));
+        List<List<String>> expected = Arrays.asList(Arrays.asList("MedicationRequest"),
+                Arrays.asList("null?identifier={MedicationRequest.patient.identifier}"));
 
         assertEquals(expected, actual);
 
     }
 
-    //Patient?_revinclude=Encounter:subject&identifier=http://hl7.org/fhir/sid/us-ssn|999622736
+    @Test
+    public void testTypedInclude() throws IOException {
+
+        String simplestProgram = "MedicationRequest?_include=MedicationRequest:patient:Patient";
+
+        List<List<String>> actual = toUrls(simplestProgram);
+        System.out.println(actual);
+
+        List<List<String>> expected = Arrays.asList(Arrays.asList("MedicationRequest"),
+                Arrays.asList("Patient?identifier={MedicationRequest.patient.identifier}"));
+
+        Assert.assertEquals(expected, actual);
+
+    }
+
 
     private List<List<String>> toUrls(String simplestProgram) throws IOException {
         FhirUrlAnalyser visitor = toVisitor(simplestProgram);
 
         List<List<ParsedUrl>> perAndParameter = visitor.getAndParameters().stream()
-                .map(httpParam -> visitor.getResourcesForHttpParam(httpParam).stream()
+                .map(httpParam -> visitor.getResourcesForHttpParam(false, httpParam).stream()
                         .map(resourceInParam -> new ParsedUrlCreator(resourceInParam, httpParam).createUrl())
-                        .flatMap(opt -> opt.isPresent()?Arrays.<ParsedUrl>asList(opt.get()).stream():Stream.<ParsedUrl>empty())
+                        .flatMap(opt -> opt.isPresent() ? Arrays.<ParsedUrl>asList(opt.get()).stream()
+                                : Stream.<ParsedUrl>empty())
                         .collect(Collectors.toList()))
                 .collect(Collectors.toList());
 
-                List<List<ParsedUrl>> perIncludeParameter;
-                if (perAndParameter.isEmpty()){
-            perAndParameter = visitor.getIncludeParameters().stream()
-                .map(httpParam -> visitor.getResourcesForHttpParam(httpParam).subList(0,1).stream()
+        List<List<ParsedUrl>> perIncludeParameter = visitor.getIncludeParameters().stream()
+                .map(httpParam -> visitor.getResourcesForHttpParam(true, httpParam).stream()
                         .map(resourceInParam -> new ParsedUrlCreator(resourceInParam, httpParam).createUrl())
-                        .flatMap(opt -> opt.isPresent()?Arrays.<ParsedUrl>asList(opt.get()).stream():Stream.<ParsedUrl>empty())
+                        .flatMap(opt -> opt.isPresent() ? Arrays.<ParsedUrl>asList(opt.get()).stream()
+                                : Stream.<ParsedUrl>empty())
                         .collect(Collectors.toList()))
                 .collect(Collectors.toList());
-
-        } 
-            perIncludeParameter = visitor.getIncludeParameters().stream()
-                .map(httpParam -> visitor.getResourcesForHttpParam(httpParam).subList(1,visitor.getResourcesForHttpParam(httpParam).size()).stream()
-                        .map(resourceInParam -> new ParsedUrlCreator(resourceInParam, httpParam).createUrl())
-                        .flatMap(opt -> opt.isPresent()?Arrays.<ParsedUrl>asList(opt.get()).stream():Stream.<ParsedUrl>empty())
-                        .collect(Collectors.toList()))
-                .collect(Collectors.toList());
-
-        
-
 
         List<List<String>> retVal = new ArrayList<>();
-        retVal.addAll(perAndParameter.stream().map(param -> param.stream().map(x->x.toString()).collect(Collectors.toList())).collect(Collectors.toList()));
-        retVal.addAll(perIncludeParameter.stream().map(param -> param.stream().map(x->x.toString()).collect(Collectors.toList())).collect(Collectors.toList()));
-        
+        retVal.addAll(perAndParameter.stream()
+                .map(param -> param.stream().map(x -> x.toString()).collect(Collectors.toList()))
+                .collect(Collectors.toList()));
+        retVal.addAll(perIncludeParameter.stream()
+                .map(param -> param.stream().map(x -> x.toString()).collect(Collectors.toList()))
+                .collect(Collectors.toList()));
 
         return retVal;
     }
@@ -356,7 +378,7 @@ public class TestFhirUrlParser {
         FhirUrlParser parser = new FhirUrlParser(inputTokenStream);
         SContext context = parser.s();
 
-        ourLog.info(TreeUtils.toPrettyTree(context,Arrays.asList(parser.getRuleNames())));
+        ourLog.info(TreeUtils.toPrettyTree(context, Arrays.asList(parser.getRuleNames())));
 
         ourLog.info(context.getText());
 

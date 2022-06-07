@@ -35,11 +35,18 @@ public class ParsedUrlCreator {
       case "VContext":
         if (httpParam.k().q() != null && "_include".equals(httpParam.k().q().SPECIAL().getText())) {
           String target = ((VContext) parent).e().getText();
-          String altResource = null;// op te zoeken in SearchParameterDefinitie
+          String altResource = null;//check at runtime, but maybe there is a hint
+          if ( ((VContext) parent).b()!=null){
+            altResource =  ((VContext) parent).b().getText();
+          }
           String key = "identifier";
           String source = resource;
+          boolean iterate = false;
+          if (httpParam.k().u()!=null && "iterate".equals(httpParam.k().u().IDENTIFIER().getText())){
+            iterate = true;
+          }
           
-          url = new ParsedUrl(altResource, key, source, Arrays.asList(target, "identifier"));
+          url = new ParsedUrl(iterate,altResource, key, source, Arrays.asList(target, "identifier"));
         } else if (((VContext) parent).e() != null) {
           ParserRuleContext ref = parent;
           while (!(ref instanceof SContext)) {

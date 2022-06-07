@@ -18,7 +18,10 @@ public class SearchParam2FhirPathRegistry {
 
         String retVal = searchParam2FhirPath.get(resource + "." +searchParam);
         if (retVal == null){
-            retVal = resource +"."+searchParam2FhirPath.get(searchParam);
+            retVal = searchParam2FhirPath.get(searchParam);
+        }
+        if (retVal == null){
+            retVal = (resource + "." +searchParam);
         }
         return retVal;
     }
