@@ -13,7 +13,7 @@ import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.SearchParameter;
 import org.springframework.stereotype.Service;
 
-@Service
+//@Service
 public class FederatorRestfulServer extends RestfulServer {
 
 
@@ -47,7 +47,9 @@ public class FederatorRestfulServer extends RestfulServer {
 			url = searchParameters.getLink(IBaseBundle.LINK_NEXT) == null ? null
 					: searchParameters.getLink(IBaseBundle.LINK_NEXT).getUrl();
 		} while (url != null);
+		
 		File pagingFile = new File(System.getProperty("java.io.tmpdir") + File.separator + "paging.db");
+		 
 		if (pagingFile.exists()){
 			pagingFile.delete();
 		}

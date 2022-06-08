@@ -14,6 +14,7 @@ import org.mapdb.DB;
 import org.mapdb.DBMaker;
 import org.mapdb.DataInput2;
 import org.mapdb.DataOutput2;
+import org.mapdb.HTreeMap;
 import org.mapdb.Serializer;
 
 import ca.uhn.fhir.context.FhirContext;
@@ -64,6 +65,8 @@ public class MapDbPagingProvider implements IPagingProvider {
     private int maximumPageSize;
     private DB db;
     private FhirContext ctx;
+    HTreeMap<String, List<IBaseResource>> map;
+    private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(MapDbPagingProvider.class);
 
     public MapDbPagingProvider(FhirContext ctx, File file, int defaultPageSize, int maximumPageSize) {
         this.defaultPageSize = defaultPageSize;
@@ -72,8 +75,11 @@ public class MapDbPagingProvider implements IPagingProvider {
         db = DBMaker
                 .fileDB(file.getAbsolutePath())
                 .fileMmapEnable()
+                .closeOnJvmShutdown()
                 .make();
-                
+        map = db
+                .hashMap("paging", Serializer.STRING, new ListIBaseResourceSerializer(ctx))
+                .createOrOpen();
 
     }
 
@@ -90,23 +96,36 @@ public class MapDbPagingProvider implements IPagingProvider {
 
     @Override
     public IBundleProvider retrieveResultList(RequestDetails theRequestDetails, String theSearchId) {
-        Map<String, List<IBaseResource>> map = db
-                .hashMap("paging", Serializer.STRING, new ListIBaseResourceSerializer(ctx))
-                .createOrOpen();
-        SimpleBundleProvider retVal = new SimpleBundleProvider(map.getOrDefault(theSearchId, Collections.emptyList()));
-        //db.close();
+        SimpleBundleProvider retVal = null;
+
+        try {
+            retVal = new SimpleBundleProvider(map.getOrDefault(theSearchId, Collections.emptyList()));
+        } catch (Exception e) {
+            ourLog.error(e.getMessage(), e);
+        } finally {
+            // map.close();
+            // db.close();
+        }
+
         return retVal;
     }
 
     @Override
     public String storeResultList(RequestDetails theRequestDetails, IBundleProvider theList) {
-        Map<String, List<IBaseResource>> map = db
-                .hashMap("paging", Serializer.STRING, new ListIBaseResourceSerializer(ctx))
-                .createOrOpen();
         UUID uuid = UUID.randomUUID();
         String id = uuid.toString();
-        map.put(id, theList.getAllResources());
-        //db.close();
+
+        try {
+
+            map.put(id, theList.getAllResources());
+
+        } catch (Exception e) {
+            ourLog.error(e.getMessage(), e);
+        } finally {
+            // map.close();
+            // db.close();
+        }
+
         return id;
     }
 
