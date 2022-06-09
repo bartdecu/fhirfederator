@@ -233,6 +233,21 @@ public class TestFhirUrlParser {
 
     }
 
+    @Test
+    public void testExploratoryString11() throws IOException {
+
+        String simplestProgram = "Patient/example";
+
+        List<List<String>> actual = toUrls(simplestProgram);
+        System.out.println(actual);
+
+        List<List<String>> expected = Arrays.asList(Arrays.asList(
+                "Patient/example"));
+
+        assertEquals(expected, actual);
+
+    }
+
     @Disabled
     public void testRevInclude() throws IOException {
 
