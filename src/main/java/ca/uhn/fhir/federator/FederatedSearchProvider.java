@@ -108,7 +108,7 @@ public class FederatedSearchProvider {
     return retVal;
   }
 
-  @Operation(name = "$doFederation", manualResponse = false, manualRequest = true, idempotent = true)
+  @Operation(name = "$doFederation", manualResponse = false, manualRequest = true, idempotent = true, global=true)
   public IBundleProvider manualInputAndOutput(HttpServletRequest theServletRequest,
       HttpServletResponse theServletResponse)
       throws IOException {

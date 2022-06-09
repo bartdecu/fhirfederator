@@ -8,7 +8,7 @@ grammar FhirUrl;
  //PARSER
 
 s : a QM c | a ;
-a : f SLASH o | f SLASH i SLASH o | f | o ;
+a : f SLASH i SLASH HISTORY SLASH n | f SLASH i | f SLASH o | f SLASH i SLASH o | f | o ;
 c : c AMP p | p ;
 p : k EQ d;
 k : q COLON u | q | e COLON r | h | e COLON u | e DOT t | e;
@@ -29,6 +29,7 @@ o : OPERATOR;
 u : IDENTIFIER;
 b : IDENTIFIER;
 w : IDENTIFIER | URL PIPE IDENTIFIER | URN PIPE IDENTIFIER;
+n : IDENTIFIER;
 
 
 
@@ -49,6 +50,7 @@ AMP: '&';
 EQ: '=';
 COMMA: ',';
 HAS: '_has';
+HISTORY: '_history';
 SPECIAL: '_'(NSEPARATOR)+;
 OPERATOR: '$'(NSEPARATOR)+;
 //IDENTIFIER: (((STRING '://' STRING? ((STRING ('.' STRING)*) | (DIGITS '.' DIGITS '.' DIGITS '.' DIGITS)) (':' DIGITS)? ('/' (STRING ('/' STRING)*))? )? | 'urn:' STRING ':' ALLOWEDINURN ) PIPE)? XSTRING ;

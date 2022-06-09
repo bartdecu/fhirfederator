@@ -29,6 +29,7 @@ public class FederatorInterceptor {
         theRequestDetails.setOperation("$doFederation");
         theRequestDetails.setResource(null);
         theRequestDetails.setResourceName(null);
+        theServletRequestDetails.setId(null);
         ourLog.error("doFederation2");
     }
 
