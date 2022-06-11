@@ -25,6 +25,7 @@ import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.fhirpath.IFhirPath;
 import ca.uhn.fhir.model.primitive.UriDt;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
+import ca.uhn.fhir.rest.server.BundleProviders;
 import ca.uhn.fhir.federator.FederatorProperties.ResourceConfig;
 
 public class ParameterExecutor {
@@ -81,7 +82,7 @@ public class ParameterExecutor {
             String completeUrl;
             completeUrl = resourceConfig.getServer() + "/" + executableUrl.toString();
             ourLog.info("Client request Url: {}", completeUrl);
-            return getResultsForURL(client, executableUrl.getResource().split("/")[0], completeUrl).stream();
+            return getResultsForURL(client, completeUrl).stream();
         }
     }
 
@@ -203,35 +204,29 @@ public class ParameterExecutor {
         }
     }
 
-    private static List<IBaseResource> getResultsForURL(IGenericClient client, String resource, String completeUrl) {
+    private static List<IBaseResource> getResultsForURL(IGenericClient client, String completeUrl) {
         List<IBaseResource> out = new ArrayList<>();
-        if (completeUrl.contains("?")) {
-            Bundle bundle = client.search().byUrl(completeUrl).returnBundle(Bundle.class).execute();
-            List<BundleLinkComponent> next = bundle.getLink().stream().filter(link -> link.getRelation().equals("next"))
-                    .collect(Collectors.toList());
-
-            List<IBaseResource> own = bundle.getEntry().stream().filter(bec -> {
-                return bec.getResource() instanceof IBaseResource;
-            })
-                    .map(bec -> ((IBaseResource) bec.getResource())).collect(Collectors.toList());
-            ourLog.info("Client request Url: {} #{}", completeUrl, own.size());
-
-            out.addAll(own);
-            if (!next.isEmpty()) {
-                List<IBaseResource> other = getResultsForURL(client, resource, next.get(0).getUrl());
-                out.addAll(other);
-            }
-
-        } else {
-            try {
-
-                IBaseResource result = client.read().resource(resource).withUrl(completeUrl).execute();
-                out.add(result);
-            } catch (RuntimeException rte) {
-                // ignore
-            }
-
+        Bundle bundle = new Bundle();
+        try {
+            bundle = client.search().byUrl(completeUrl).returnBundle(Bundle.class).execute();
+        } catch (RuntimeException e) {
+            ourLog.error("Request failed: {} {}", completeUrl, e.getMessage());
         }
+        List<BundleLinkComponent> next = bundle.getLink().stream().filter(link -> link.getRelation().equals("next"))
+                .collect(Collectors.toList());
+
+        List<IBaseResource> own = bundle.getEntry().stream().filter(bec -> {
+            return bec.getResource() instanceof IBaseResource;
+        })
+                .map(bec -> ((IBaseResource) bec.getResource())).collect(Collectors.toList());
+        ourLog.info("Client request Url: {} #{}", completeUrl, own.size());
+
+        out.addAll(own);
+        if (!next.isEmpty()) {
+            List<IBaseResource> other = getResultsForURL(client, next.get(0).getUrl());
+            out.addAll(other);
+        }
+
         return out;
     }
 

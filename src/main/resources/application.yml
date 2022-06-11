@@ -3,23 +3,26 @@ server:
 federator:
   members:
     - url: "https://server.fire.ly/R4"
-    - url: "https://blaze.life.uni-leipzig.de/fhir"
+    #- url: "https://blaze.life.uni-leipzig.de/fhir"
     - url: "https://hapi.fhir.org/baseR4"
   resources:
-    default_: 
-      - url: "https://server.fire.ly/R4"
-      - url: "https://blaze.life.uni-leipzig.de/fhir"
-      - url: "https://hapi.fhir.org/baseR4"
+    default: 
+      - server: "https://server.fire.ly/R4"
+      #- server: "https://blaze.life.uni-leipzig.de/fhir"
+      - server: "https://hapi.fhir.org/baseR4"
     other:  
       Observation:
-        - url:  "https://hapi.fhir.org/baseR4"
+        - server:  "https://hapi.fhir.org/baseR4"
       Patient:
-        - url: "https://hapi.fhir.org/baseR4"
-        - url: "https://server.fire.ly/R4"
+        - server: "https://hapi.fhir.org/baseR4"
+        - server: "https://server.fire.ly/R4"
+          read: true
       Practitioner:
-        - url: "https://server.fire.ly/R4"
+        - server: "https://server.fire.ly/R4"
       AuditEvent:
-        - url: "https://hapi.fhir.org/baseR4"
+        - server: "https://hapi.fhir.org/baseR4"
+      metadata:
+        - server: "https://server.fire.ly/R4"
   setup:
     url: "https://server.fire.ly/R4"
 #    url: "https://hapi.fhir.org/baseR4"

@@ -36,7 +36,7 @@ n : IDENTIFIER;
 //LEXER
 fragment NSEPARATOR : [a-zA-Z] ;//(DOT | COLON | SLASH | QM | AMP | EQ | COMMA) ;
 fragment UPPERCASE  : [A-Z] ;
-fragment STRING : [a-zA-Z0-9\-]+;
+fragment STRING : [a-zA-Z0-9\-.]+;
 fragment DIGITS : [0-9]+ ;
 fragment XSTRING : [A-Za-z0-9\-_%]+ ;
 fragment ALLOWEDINURN : [A-Za-z0-9.;\-_%]+ ;

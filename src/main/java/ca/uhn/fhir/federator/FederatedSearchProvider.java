@@ -2,8 +2,10 @@ package ca.uhn.fhir.federator;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
@@ -13,12 +15,19 @@ import java.util.stream.Stream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.antlr.v4.runtime.ANTLRErrorListener;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CharStream;
+import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.Parser;
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.RecognitionException;
+import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.TokenSource;
 import org.antlr.v4.runtime.TokenStream;
+import org.antlr.v4.runtime.atn.ATNConfigSet;
+import org.antlr.v4.runtime.dfa.DFA;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.Bundle;
@@ -40,8 +49,6 @@ import ca.uhn.fhir.rest.param.TokenParam;
 public class FederatedSearchProvider {
   private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(FederatedSearchProvider.class);
 
-  // Create a context
-  // FhirContext ctx = FhirContext.forR4();
   private ClientRegistry cr;
 
   private ResourceRegistry rr;
@@ -65,47 +72,6 @@ public class FederatedSearchProvider {
     this.ctx = ctx;
     this.s2f = s2f;
 
-  }
-
-  /**
-   * This method is a Patient search, but HAPI can not automatically
-   * determine the resource type so it must be explicitly stated.
-   */
-  @Search(type = Patient.class)
-  public Bundle searchForPatients(@RequiredParam(name = Patient.SP_IDENTIFIER) TokenParam identifier) {
-    Bundle retVal = new Bundle();
-    // perform search
-    Set<String> keys = cr.getKeySet();
-    Stream<String> stream = keys.parallelStream();
-
-    Function<String, Stream<Patient>> f = new Function<String, Stream<Patient>>() {
-      public Stream<Patient> apply(String prefix) {
-        IGenericClient client = cr.getClient(prefix);
-        Stream<Patient> out = null;
-        if (identifier.getSystem().startsWith(prefix)) {
-
-          Patient patient = client.read().resource(Patient.class).withId(identifier.getValue()).execute();
-          out = Arrays.<Patient>asList(patient).stream();
-        } else {
-
-          Bundle bundle = client.search().forResource(Patient.class)
-              .where(Patient.IDENTIFIER.exactly().systemAndIdentifier(identifier.getSystem(), identifier.getValue()))
-              .returnBundle(Bundle.class).execute();
-
-          out = bundle.getEntry().stream().filter(bec -> {
-            return bec.getResource() instanceof Patient;
-          }).map(bec -> ((Patient) bec.getResource()));
-
-        }
-        return out;
-      }
-    };
-
-    List<Patient> result = stream.flatMap(f).collect(Collectors.<Patient>toList());
-
-    result.stream().forEach(patient -> retVal.addEntry().setResource(patient));
-
-    return retVal;
   }
 
   @Operation(name = "$doFederation", manualResponse = false, manualRequest = true, idempotent = true, global=true)
@@ -141,12 +107,44 @@ public class FederatedSearchProvider {
       toParse = tenantAndResource;
     }
 
-    CharStream inputCharStream = new ANTLRInputStream(new StringReader(toParse.substring(1)));
+    toParse = URLDecoder.decode(toParse, "UTF-8");
+
+    CharStream inputCharStream = CharStreams.fromString(toParse.substring(1));
     TokenSource tokenSource = new FhirUrlLexer(inputCharStream);
     TokenStream inputTokenStream = new CommonTokenStream(tokenSource);
     FhirUrlParser parser = new FhirUrlParser(inputTokenStream);
 
-    // parser.addErrorListener(new TestErrorListener());
+    parser.addErrorListener(new ANTLRErrorListener() {
+
+      @Override
+      public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine,
+          String msg, RecognitionException e) {
+        ourLog.error("Parsing error {} {} {} {} {}", offendingSymbol, line, charPositionInLine, msg, e.getMessage());
+        
+      }
+
+      @Override
+      public void reportAmbiguity(Parser recognizer, DFA dfa, int startIndex, int stopIndex, boolean exact,
+          BitSet ambigAlts, ATNConfigSet configs) {
+        // TODO Auto-generated method stub
+        
+      }
+
+      @Override
+      public void reportAttemptingFullContext(Parser recognizer, DFA dfa, int startIndex, int stopIndex,
+          BitSet conflictingAlts, ATNConfigSet configs) {
+        // TODO Auto-generated method stub
+        
+      }
+
+      @Override
+      public void reportContextSensitivity(Parser recognizer, DFA dfa, int startIndex, int stopIndex, int prediction,
+          ATNConfigSet configs) {
+        // TODO Auto-generated method stub
+        
+      }
+      
+    });
 
     SContext context = parser.s();
 
