@@ -19,6 +19,9 @@ public class IncludeNode implements Node {
     @Override
     public IBundleProvider execute() {
         IBundleProvider refBundle = referenceNode.execute();
+        if (refBundle.getAllResources().isEmpty()){
+            return new SimpleBundleProvider();
+        }
         List<IBundleProvider> providers = new ArrayList<>();
         providers.add(refBundle);
         IBundleProvider include = parameterNode.executeWithReference(refBundle);

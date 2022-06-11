@@ -40,11 +40,11 @@ public class FederatorProperties {
     List<ResourceConfig> default_;
     Map<String, List<ResourceConfig>> other;
 
-    public List<ResourceConfig> getDefault_() {
+    public List<ResourceConfig> getDefault() {
       return default_;
     }
 
-    public void setDefault_(List<ResourceConfig> default_) {
+    public void setDefault(List<ResourceConfig> default_) {
       this.default_ = default_;
     }
 
@@ -71,18 +71,25 @@ public class FederatorProperties {
 
   public static  class ResourceConfig {
 
-    String url;
+    String server;
     Integer maxOr;
+    Boolean read;
     
     
+    public Boolean getRead() {
+      return read;
+    }
+    public void setRead(Boolean read) {
+      this.read = read;
+    }
     public String getServer() {
-        return url;
+        return server;
     }
     public Integer getMaxOr() {
         return maxOr;
     }
-    public void setUrl(String url) {
-      this.url = url;
+    public void setServer(String url) {
+      this.server = url;
     }
     public void setMaxOr(Integer maxOr) {
       this.maxOr = maxOr;

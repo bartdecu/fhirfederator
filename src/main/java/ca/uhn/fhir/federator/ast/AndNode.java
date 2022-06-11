@@ -1,6 +1,5 @@
 package ca.uhn.fhir.federator.ast;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -20,13 +19,19 @@ public class AndNode implements Node {
 
     @Override
     public IBundleProvider execute() {
-        List<IBundleProvider> results = nodes.stream().map(x -> x.execute()).collect(Collectors.toList());
-        List<IBaseResource> and = results.stream().map(x -> x.getAllResources()).reduce((a,b)->{
+        Node andNode = nodes.stream().reduce((a,b)-> {
+            List<IBaseResource> aList = a.execute().getAllResources();
+            if (aList.isEmpty()){
+                return NoopNode.EMPTY;
+            }
+            List<IBaseResource> bList = b.execute().getAllResources();
+            if (bList.isEmpty()){
+                return NoopNode.EMPTY;
+            }
+            return new NoopNode(intersection(aList, bList));
 
-            return intersection(a, b);
-
-        }).orElse(Collections.emptyList());
-        return new SimpleBundleProvider(and);
+        }).orElse(NoopNode.EMPTY);
+        return new SimpleBundleProvider(andNode.execute().getAllResources());
     }
 
     private List<IBaseResource> intersection(List<IBaseResource> list, List<IBaseResource> list2) {
