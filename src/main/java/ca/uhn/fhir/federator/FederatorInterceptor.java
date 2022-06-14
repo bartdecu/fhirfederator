@@ -4,6 +4,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang3.StringUtils;
+
 import ca.uhn.fhir.interceptor.api.Hook;
 import ca.uhn.fhir.interceptor.api.Interceptor;
 import ca.uhn.fhir.interceptor.api.Pointcut;
@@ -20,27 +22,34 @@ public class FederatorInterceptor {
     @Hook(Pointcut.SERVER_INCOMING_REQUEST_PRE_HANDLER_SELECTED)
     public void doFederation2(HttpServletRequest theServletRequest, HttpServletResponse theServletResponse,
             RequestDetails theRequestDetails, ServletRequestDetails theServletRequestDetails) throws ServletException {
-        if (theServletRequestDetails.getId()!=null){
+        if (theServletRequestDetails.getId() != null) {
             ourLog.info("This is a read URL: {}", theRequestDetails.getCompleteUrl());
-            return ;
+            return;
         }
-                // add list of parameters to do nothing
+        // add list of parameters to do nothing
         // _getpages, _getpagesoffset
         if (theRequestDetails.getParameters().get(Constants.PARAM_PAGINGACTION) != null) {
             ourLog.info("This is a paging URL: {}", theRequestDetails.getCompleteUrl());
             return;
         }
-        if ("metadata".equals(theRequestDetails.getOperation())){
+        if ("metadata".equals(theRequestDetails.getOperation())) {
             ourLog.info("This is a metadata URL: {}", theRequestDetails.getCompleteUrl());
             return;
         }
 
-        theRequestDetails.setOperation("$doFederation");
-        theRequestDetails.setResource(null);
-        theRequestDetails.setResourceName(null);
-        //maybe we won't do this
-        //theServletRequestDetails.setId(null);
-        ourLog.error("doFederation2");
+        if (("_search".equals(theRequestDetails.getOperation()) && theRequestDetails.getRequestType().equals("POST"))
+                ||
+                (!StringUtils.isEmpty(theRequestDetails.getResourceName())
+                        && theRequestDetails.getRequestType().equals("GET"))) {
+
+            theRequestDetails.setOperation("$doFed eration");
+            theRequestDetails.setResource(null);
+            theRequestDetails.setResourceName(null);
+            ourLog.error("doFederation2");
+
+        }
+
+        return;
     }
 
 }

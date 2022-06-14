@@ -73,14 +73,22 @@ public class FederatorProperties {
 
     String server;
     Integer maxOr;
-    Boolean read;
+    String read;
+    private String create;
+    private String update;
     
     
-    public Boolean getRead() {
+    public String getRead() {
       return read;
     }
-    public void setRead(Boolean read) {
+    public void setRead(String read) {
       this.read = read;
+    }
+    public void setCreate(String create) {
+      this.create = create;
+    }
+    public void setUpdate(String update) {
+      this.update = update;
     }
     public String getServer() {
         return server;
@@ -93,6 +101,12 @@ public class FederatorProperties {
     }
     public void setMaxOr(Integer maxOr) {
       this.maxOr = maxOr;
+    }
+    public String getCreate() {
+        return create;
+    }
+    public String getUpdate() {
+        return update;
     }
  
 }

@@ -14,19 +14,14 @@ import org.apache.commons.collections4.keyvalue.DefaultMapEntry;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBase;
 import org.hl7.fhir.instance.model.api.IBaseResource;
-import org.hl7.fhir.r4.model.BaseResource;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Bundle.BundleLinkComponent;
 import org.hl7.fhir.r4.model.Identifier;
 import org.hl7.fhir.r4.model.Reference;
-import org.hl7.fhir.r4.model.Resource;
 
 import ca.uhn.fhir.context.FhirContext;
-import ca.uhn.fhir.fhirpath.IFhirPath;
-import ca.uhn.fhir.model.primitive.UriDt;
-import ca.uhn.fhir.rest.client.api.IGenericClient;
-import ca.uhn.fhir.rest.server.BundleProviders;
 import ca.uhn.fhir.federator.FederatorProperties.ResourceConfig;
+import ca.uhn.fhir.rest.client.api.IGenericClient;
 
 public class ParameterExecutor {
     private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(ParameterExecutor.class);
