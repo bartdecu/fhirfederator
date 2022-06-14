@@ -1,14 +1,11 @@
 package ca.uhn.fhir.federator;
 
 import java.io.IOException;
-import java.io.StringReader;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.List;
-import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -16,7 +13,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.antlr.v4.runtime.ANTLRErrorListener;
-import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -30,21 +26,16 @@ import org.antlr.v4.runtime.atn.ATNConfigSet;
 import org.antlr.v4.runtime.dfa.DFA;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.hl7.fhir.r4.model.Bundle;
-import org.hl7.fhir.r4.model.Patient;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.federator.FhirUrlParser.SContext;
 import ca.uhn.fhir.federator.ast.AndNode;
 import ca.uhn.fhir.federator.ast.IncludeNode;
 import ca.uhn.fhir.federator.ast.Node;
+import ca.uhn.fhir.federator.ast.NoopNode;
 import ca.uhn.fhir.federator.ast.ParameterNode;
 import ca.uhn.fhir.rest.annotation.Operation;
-import ca.uhn.fhir.rest.annotation.RequiredParam;
-import ca.uhn.fhir.rest.annotation.Search;
 import ca.uhn.fhir.rest.api.server.IBundleProvider;
-import ca.uhn.fhir.rest.client.api.IGenericClient;
-import ca.uhn.fhir.rest.param.TokenParam;
 
 public class FederatedSearchProvider {
   private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(FederatedSearchProvider.class);
@@ -180,7 +171,7 @@ public class FederatedSearchProvider {
     List<Node> chain = new ArrayList<>();
     chain.add(and);
     chain.addAll(perIncludeParameter);
-    Node include = chain.stream().reduce((a, b) -> new IncludeNode(a, (ParameterNode) b)).get();
+    Node include = chain.stream().reduce((a, b) -> new IncludeNode(a, (ParameterNode) b)).orElse(NoopNode.EMPTY);
 
     return include;
 

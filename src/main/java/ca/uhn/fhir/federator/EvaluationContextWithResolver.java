@@ -21,14 +21,12 @@ public class EvaluationContextWithResolver implements IEvaluationContext {
             .getLogger(EvaluationContextWithResolver.class);
     private IEvaluationContext delegate;
     private FhirContext ctx;
-    private ClientRegistry cr;
     private ResourceRegistry rr;
 
     public EvaluationContextWithResolver(IEvaluationContext delegate, FhirContext ctx, ClientRegistry cr,
             ResourceRegistry rr) {
         this.delegate = delegate;
         this.ctx = ctx;
-        this.cr = cr;
         this.rr = rr;
     }
 

@@ -1,11 +1,8 @@
 package ca.uhn.fhir.federator;
 
 import java.io.File;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
@@ -67,7 +64,7 @@ public class FederatorRestfulServer extends RestfulServer {
 			pagingFile.delete();
 		}
 
-		Map<BaseRuntimeElementDefinition<?>, Class<? extends IBase>> reverse = getReverseMap();
+		
 
 		for (BaseRuntimeElementDefinition rt : getFhirContext().getElementDefinitions()) {
 
@@ -78,7 +75,9 @@ public class FederatorRestfulServer extends RestfulServer {
 				object = base.getDeclaredConstructor().newInstance();
 				if (object instanceof IBaseResource) {
 					ourLog.info("Loading {}", rt.getImplementingClass().getSimpleName());
-					registerProvider(new FederatedReadProvider(cr, rr, (Class<? extends IBaseResource>) base));
+					registerProvider(new FederatedReadProvider(this.getFhirContext(), cr, rr, (Class<? extends IBaseResource>) base));
+					registerProvider(new FederatedCreateProvider(this.getFhirContext(), cr, rr, (Class<? extends IBaseResource>) base));
+					//registerProvider(new FederatedReadProvider(this.getFhirContext(), cr, rr, (Class<? extends IBaseResource>) base));
 				}
 			} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
 					| InvocationTargetException | NoSuchMethodException | SecurityException e) {
@@ -94,33 +93,5 @@ public class FederatorRestfulServer extends RestfulServer {
 		registerInterceptor(new ResponseHighlighterInterceptor());
 	}
 
-	private Map<BaseRuntimeElementDefinition<?>, Class<? extends IBase>> getReverseMap() {
 
-		try {
-			Field privateField = getFhirContext().getClass().getDeclaredField("myClassToElementDefinition");
-
-			// Set the accessibility as true
-			privateField.setAccessible(true);
-
-			// Store the value of private field in variable
-			Map<Class<? extends IBase>, BaseRuntimeElementDefinition<?>> name;
-			name = (Map<Class<? extends IBase>, BaseRuntimeElementDefinition<?>>) privateField
-					.get(getFhirContext());
-
-			Map<BaseRuntimeElementDefinition<?>, Class<? extends IBase>> reverse = new HashMap<>();
-
-			for (Entry<Class<? extends IBase>, BaseRuntimeElementDefinition<?>> entry : name.entrySet()) {
-				reverse.put(entry.getValue(), entry.getKey());
-			}
-
-			return reverse;
-
-		} catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		return null;
-
-	}
 }

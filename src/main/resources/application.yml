@@ -3,18 +3,19 @@ server:
 federator:
   members:
     - url: "https://server.fire.ly/R4"
-    #- url: "https://blaze.life.uni-leipzig.de/fhir"
+    - url: "https://blaze.life.uni-leipzig.de/fhir"
     - url: "https://hapi.fhir.org/baseR4"
   resources:
     default: 
       - server: "https://server.fire.ly/R4"
-      #- server: "https://blaze.life.uni-leipzig.de/fhir"
+      - server: "https://blaze.life.uni-leipzig.de/fhir"
       - server: "https://hapi.fhir.org/baseR4"
     other:  
-      Observation:
-        - server:  "https://hapi.fhir.org/baseR4"
+      #Observation:
+      #  - server:  "https://hapi.fhir.org/baseR4"
       Patient:
         - server: "https://hapi.fhir.org/baseR4"
+          create: "Patient.name.family = \"Decuypere\""
         - server: "https://server.fire.ly/R4"
           read: true
       Practitioner:
