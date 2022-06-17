@@ -37,10 +37,10 @@ public class FederatorInterceptor {
             return;
         }
 
-        if (("_search".equals(theRequestDetails.getOperation()) && theRequestDetails.getRequestType().equals("POST"))
+        if (("_search".equals(theRequestDetails.getOperation()) && theRequestDetails.getRequestType().name().equalsIgnoreCase("POST"))
                 ||
                 (!StringUtils.isEmpty(theRequestDetails.getResourceName())
-                        && theRequestDetails.getRequestType().equals("GET"))) {
+                        && theRequestDetails.getRequestType().name().equalsIgnoreCase("GET"))) {
 
             theRequestDetails.setOperation("$doFed eration");
             theRequestDetails.setResource(null);
