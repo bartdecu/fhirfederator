@@ -11,7 +11,6 @@ import org.springframework.context.annotation.Bean;
 import ca.uhn.fhir.rest.server.RestfulServer;
 
 @SpringBootApplication(exclude = ElasticsearchRestClientAutoConfiguration.class)
-@EnableAutoConfiguration
 public class Application {
   @Autowired FederatorProperties configuration;
 
