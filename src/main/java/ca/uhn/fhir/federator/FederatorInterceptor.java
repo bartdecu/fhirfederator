@@ -42,7 +42,7 @@ public class FederatorInterceptor {
                 (!StringUtils.isEmpty(theRequestDetails.getResourceName())
                         && theRequestDetails.getRequestType().name().equalsIgnoreCase("GET"))) {
 
-            theRequestDetails.setOperation("$doFed eration");
+            theRequestDetails.setOperation("$doFederation");
             theRequestDetails.setResource(null);
             theRequestDetails.setResourceName(null);
             ourLog.error("doFederation2");

@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.BitSet;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -12,18 +12,13 @@ import java.util.stream.Stream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.antlr.v4.runtime.ANTLRErrorListener;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.Parser;
 import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.RecognitionException;
-import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.TokenSource;
 import org.antlr.v4.runtime.TokenStream;
-import org.antlr.v4.runtime.atn.ATNConfigSet;
-import org.antlr.v4.runtime.dfa.DFA;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -36,9 +31,10 @@ import ca.uhn.fhir.federator.ast.NoopNode;
 import ca.uhn.fhir.federator.ast.ParameterNode;
 import ca.uhn.fhir.rest.annotation.Operation;
 import ca.uhn.fhir.rest.api.server.IBundleProvider;
+import ca.uhn.fhir.rest.server.exceptions.InvalidRequestException;
 
 public class FederatedSearchProvider {
-  private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(FederatedSearchProvider.class);
+  static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(FederatedSearchProvider.class);
 
   private ClientRegistry cr;
 
@@ -47,6 +43,8 @@ public class FederatedSearchProvider {
   private FhirContext ctx;
 
   private SearchParam2FhirPathRegistry s2f;
+
+  private boolean handlingStrict;
 
   public FhirContext getCtx() {
     return ctx;
@@ -75,6 +73,14 @@ public class FederatedSearchProvider {
     String servletPath = StringUtils.defaultString(theServletRequest.getServletPath());
     StringBuffer requestUrl = theServletRequest.getRequestURL();
     String tenantAndResource = StringUtils.defaultString(theServletRequest.getPathInfo());
+    Enumeration<String> preferHeaders = theServletRequest.getHeaders("Prefer");
+    for (String preferHeader = null;preferHeaders.hasMoreElements();preferHeader = preferHeaders.nextElement()){
+      if("handling=strict".equals(preferHeader)){
+        this.handlingStrict = true;
+      }
+    }    
+
+
     if (ourLog.isTraceEnabled()) {
       ourLog.trace("Request FullPath: {}", requestFullPath);
       ourLog.trace("Servlet Path: {}", servletPath);
@@ -105,37 +111,7 @@ public class FederatedSearchProvider {
     TokenStream inputTokenStream = new CommonTokenStream(tokenSource);
     FhirUrlParser parser = new FhirUrlParser(inputTokenStream);
 
-    parser.addErrorListener(new ANTLRErrorListener() {
-
-      @Override
-      public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine,
-          String msg, RecognitionException e) {
-        ourLog.error("Parsing error {} {} {} {} {}", offendingSymbol, line, charPositionInLine, msg, e.getMessage());
-        
-      }
-
-      @Override
-      public void reportAmbiguity(Parser recognizer, DFA dfa, int startIndex, int stopIndex, boolean exact,
-          BitSet ambigAlts, ATNConfigSet configs) {
-        // TODO Auto-generated method stub
-        
-      }
-
-      @Override
-      public void reportAttemptingFullContext(Parser recognizer, DFA dfa, int startIndex, int stopIndex,
-          BitSet conflictingAlts, ATNConfigSet configs) {
-        // TODO Auto-generated method stub
-        
-      }
-
-      @Override
-      public void reportContextSensitivity(Parser recognizer, DFA dfa, int startIndex, int stopIndex, int prediction,
-          ATNConfigSet configs) {
-        // TODO Auto-generated method stub
-        
-      }
-      
-    });
+    parser.addErrorListener(new ParserErrorListener());
 
     SContext context = parser.s();
 
@@ -156,7 +132,7 @@ public class FederatedSearchProvider {
 
     List<Node> perParameter = visitor.getAndParameters()
         .stream()
-        .map(httpParam -> createPartialUrls(false, httpParam, visitor))
+        .map(httpParam -> createPartialUrls(handlingStrict, false, httpParam, visitor, s2f))
         .map(partialUrls -> new ParameterNode(partialUrls, rr, cr, ctx, s2f))
         .collect(Collectors.toList());
 
@@ -164,7 +140,7 @@ public class FederatedSearchProvider {
 
     List<ParameterNode> perIncludeParameter = visitor.getIncludeParameters()
         .stream()
-        .map(httpParam -> createPartialUrls(true, httpParam, visitor))
+        .map(httpParam -> createPartialUrls(handlingStrict, true, httpParam, visitor, s2f))
         .map(partialUrls -> new ParameterNode(partialUrls, rr, cr, ctx, s2f))
         .collect(Collectors.toList());
 
@@ -177,10 +153,26 @@ public class FederatedSearchProvider {
 
   }
 
-  private List<ParsedUrl> createPartialUrls(boolean dependent,ParserRuleContext httpParam, FhirUrlAnalyser visitor) {
+  private List<ParsedUrl> createPartialUrls(boolean handlingStrict, boolean dependent,ParserRuleContext httpParam, FhirUrlAnalyser visitor, SearchParam2FhirPathRegistry s2f) {
     return visitor.getResourcesForHttpParam(dependent, httpParam).stream()
         .map(resourceInParam -> new ParsedUrlCreator(resourceInParam, httpParam).createUrl())
         .flatMap(opt -> opt.isPresent() ? Arrays.<ParsedUrl>asList(opt.get()).stream() : Stream.<ParsedUrl>empty())
+        .map(parsedUrl -> validateKey(parsedUrl, handlingStrict, s2f))
         .collect(Collectors.toList());
+  }
+
+  private ParsedUrl validateKey(ParsedUrl parsedUrl, boolean handlingStrict, SearchParam2FhirPathRegistry s2f) {
+      boolean ok = CollectionUtils.isEmpty(parsedUrl.getKey());
+      if (!ok){ 
+        ok = s2f.searchParamExists(parsedUrl.getResource(), parsedUrl.getKey().get(0));
+      }
+      if(!ok && handlingStrict){
+        throw new InvalidRequestException(String.format("SearchParam {} does not exist for resource {}", parsedUrl.getKey().get(0), parsedUrl.getResource()));
+      } if (!ok && !handlingStrict){
+        return new ParsedUrl(parsedUrl.getResource());
+      } else {
+        return parsedUrl;
+      }
+
   }
 }
