@@ -9,30 +9,36 @@ import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.fhirpath.IFhirPath;
 
 public class ResourceCollector {
-    private List<IBase> input;
-    private List<String> searchParams;
-    private SearchParam2FhirPathRegistry s2f;
-    private ResourceRegistry rr;
-    private ClientRegistry cr;
-    private FhirContext ctx;
+  private List<IBase> input;
+  private List<String> searchParams;
+  private SearchParam2FhirPathRegistry s2f;
+  private ResourceRegistry rr;
+  private ClientRegistry cr;
+  private FhirContext ctx;
 
-    public ResourceCollector(FhirContext ctx, ClientRegistry cr, ResourceRegistry rr, SearchParam2FhirPathRegistry s2f,
-            List<IBase> input, List<String> searchParams) {
-        this.ctx = ctx;
-        this.cr = cr;
-        this.rr = rr;
-        this.s2f = s2f;
-        this.input = input;
-        this.searchParams = searchParams;
-    }
+  public ResourceCollector(
+      FhirContext ctx,
+      ClientRegistry cr,
+      ResourceRegistry rr,
+      SearchParam2FhirPathRegistry s2f,
+      List<IBase> input,
+      List<String> searchParams) {
+    this.ctx = ctx;
+    this.cr = cr;
+    this.rr = rr;
+    this.s2f = s2f;
+    this.input = input;
+    this.searchParams = searchParams;
+  }
 
-    public List<IBase> execute() {
-        final List<IBase> toProcess = new ArrayList<>(this.input);
-        final List<IBase> nextRound = new ArrayList<>();
-        
-        this.searchParams.forEach(searchParam -> {
-        
-            toProcess.forEach(inputResource -> {
+  public List<IBase> execute() {
+    final List<IBase> toProcess = new ArrayList<>(this.input);
+    final List<IBase> nextRound = new ArrayList<>();
+
+    this.searchParams.forEach(
+        searchParam -> {
+          toProcess.forEach(
+              inputResource -> {
                 String resourceName = inputResource.getClass().getSimpleName();
                 List<IBase> outputs;
                 // IFhirPath fhirPath = ctx.newFhirPath();
@@ -40,16 +46,12 @@ public class ResourceCollector {
                 String fp = s2f.getFhirPath(resourceName, searchParam);
                 outputs = fhirPath.evaluate(inputResource, fp, IBase.class);
                 nextRound.addAll(outputs);
-            });
-        
-            toProcess.clear();
-            toProcess.addAll(nextRound);
-            nextRound.clear();
-        
+              });
+
+          toProcess.clear();
+          toProcess.addAll(nextRound);
+          nextRound.clear();
         });
-        return toProcess;
-    }
-
-    
-
+    return toProcess;
+  }
 }

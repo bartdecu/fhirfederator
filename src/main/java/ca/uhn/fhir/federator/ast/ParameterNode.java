@@ -18,44 +18,49 @@ import ca.uhn.fhir.rest.server.SimpleBundleProvider;
 
 public class ParameterNode implements Node {
 
-    private List<ParsedUrl> parsedUrls;
-    private ParameterExecutor parameterExecutor;
-    private ResourceRegistry rr;
-    private ClientRegistry cr;
-    private FhirContext ctx;
-    private SearchParam2FhirPathRegistry s2f;
-    private boolean iterate;
+  private List<ParsedUrl> parsedUrls;
+  private ParameterExecutor parameterExecutor;
+  private ResourceRegistry rr;
+  private ClientRegistry cr;
+  private FhirContext ctx;
+  private SearchParam2FhirPathRegistry s2f;
+  private boolean iterate;
 
-    public ParameterNode(List<ParsedUrl> parsedUrls, ResourceRegistry rr,
-            ClientRegistry cr, FhirContext ctx, SearchParam2FhirPathRegistry s2f) {
-        this.parsedUrls = parsedUrls;
-        this.rr = rr;
-        this.cr = cr;
-        this.ctx = ctx;
-        this.s2f = s2f;
-        this.iterate = parsedUrls.stream().anyMatch(x -> x.isIterate());
+  public ParameterNode(
+      List<ParsedUrl> parsedUrls,
+      ResourceRegistry rr,
+      ClientRegistry cr,
+      FhirContext ctx,
+      SearchParam2FhirPathRegistry s2f) {
+    this.parsedUrls = parsedUrls;
+    this.rr = rr;
+    this.cr = cr;
+    this.ctx = ctx;
+    this.s2f = s2f;
+    this.iterate = parsedUrls.stream().anyMatch(x -> x.isIterate());
+  }
+
+  @Override
+  public IBundleProvider execute() {
+    return executeWithReference(null);
+  }
+
+  public IBundleProvider executeWithReference(IBundleProvider reference) {
+    parameterExecutor = new ParameterExecutor(parsedUrls, rr, cr, ctx, s2f);
+    if (reference != null) {
+      List<IBaseResource> resources = reference.getAllResources();
+      Map<String, List<IBaseResource>> resourceCachePerParameter =
+          resources.stream()
+              .collect(
+                  Collectors.groupingBy(
+                      x -> x.getClass().getSimpleName(), HashMap::new, Collectors.toList()));
+      parameterExecutor.setCachedResources(resourceCachePerParameter);
     }
+    List<IBaseResource> parameterResources = parameterExecutor.execute();
+    return new SimpleBundleProvider(parameterResources);
+  }
 
-    @Override
-    public IBundleProvider execute() {
-        return executeWithReference(null);
-    }
-
-    public IBundleProvider executeWithReference(IBundleProvider reference) {
-        parameterExecutor = new ParameterExecutor(parsedUrls, rr, cr, ctx, s2f);
-        if (reference != null) {
-            List<IBaseResource> resources = reference.getAllResources();
-            Map<String, List<IBaseResource>> resourceCachePerParameter = resources.stream()
-                    .collect(Collectors.groupingBy(x -> x.getClass().getSimpleName(), HashMap::new,
-                            Collectors.toList()));
-            parameterExecutor.setCachedResources(resourceCachePerParameter);
-        }
-        List<IBaseResource> parameterResources = parameterExecutor.execute();
-        return new SimpleBundleProvider(parameterResources);
-    }
-
-    public boolean isIterate(){
-        return iterate;
-    }
-
+  public boolean isIterate() {
+    return iterate;
+  }
 }

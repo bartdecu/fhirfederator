@@ -18,7 +18,7 @@ import ca.uhn.fhir.federator.FederatorProperties.ResourceConfig;
 import ca.uhn.fhir.rest.server.RestfulServer;
 import ca.uhn.fhir.rest.server.interceptor.ResponseHighlighterInterceptor;
 
-//@Service
+// @Service
 public class FederatorRestfulServer extends RestfulServer {
 
   public static final String ORG_HL_7_FHIR_R_4_MODEL_PREFIX = "org.hl7.fhir.r4.model.";
@@ -30,31 +30,43 @@ public class FederatorRestfulServer extends RestfulServer {
 
     // Create a context for the appropriate version
     setFhirContext(FhirContext.forR4());
-    ClientRegistry cr = new ClientRegistry(
-        configuration.getMembers().stream().map(x -> x.getUrl()).collect(Collectors.toList()),
-        this.getFhirContext());
+    ClientRegistry cr =
+        new ClientRegistry(
+            configuration.getMembers().stream().map(x -> x.getUrl()).collect(Collectors.toList()),
+            this.getFhirContext());
     ResourceRegistry rr = new ResourceRegistry(configuration.getResources().getDefault());
-    for (Entry<String, List<ResourceConfig>> resourceUrl : configuration.resources.other.entrySet()) {
+    for (Entry<String, List<ResourceConfig>> resourceUrl :
+        configuration.resources.other.entrySet()) {
       for (ResourceConfig resourceConfig : resourceUrl.getValue()) {
         rr.putServer4Resource(resourceUrl.getKey(), resourceConfig);
       }
-
     }
     SearchParam2FhirPathRegistry s2f = new SearchParam2FhirPathRegistry();
 
     String url = configuration.getSetup().getUrl() + "/SearchParameter";
     do {
-      Bundle searchParameters = cr.getClient(configuration.getSetup().getUrl()).search().byUrl(url)
-          .returnBundle(Bundle.class).execute();
+      Bundle searchParameters =
+          cr.getClient(configuration.getSetup().getUrl())
+              .search()
+              .byUrl(url)
+              .returnBundle(Bundle.class)
+              .execute();
 
-      searchParameters.getEntry().forEach(x -> {
-        SearchParameter sp = (SearchParameter) x.getResource();
-        sp.getBase().forEach(base -> {
-          s2f.put(base + "." + sp.getCode(), sp.getExpression());
-        });
-      });
-      url = searchParameters.getLink(IBaseBundle.LINK_NEXT) == null ? null
-          : searchParameters.getLink(IBaseBundle.LINK_NEXT).getUrl();
+      searchParameters
+          .getEntry()
+          .forEach(
+              x -> {
+                SearchParameter sp = (SearchParameter) x.getResource();
+                sp.getBase()
+                    .forEach(
+                        base -> {
+                          s2f.put(base + "." + sp.getCode(), sp.getExpression());
+                        });
+              });
+      url =
+          searchParameters.getLink(IBaseBundle.LINK_NEXT) == null
+              ? null
+              : searchParameters.getLink(IBaseBundle.LINK_NEXT).getUrl();
     } while (url != null);
 
     File pagingFile = new File(System.getProperty("java.io.tmpdir") + File.separator + "paging.db");
@@ -67,18 +79,25 @@ public class FederatorRestfulServer extends RestfulServer {
 
     for (var object : clazzes) {
       try {
-          ourLog.info("Loading {}", ((IBaseResource) object).getClass().getSimpleName());
-          registerProvider(new FederatedReadProvider(this.getFhirContext(), cr, rr,
-              (Class<? extends IBaseResource>) ((IBaseResource) object).getClass()));
-          registerProvider(new FederatedCreateProvider(this.getFhirContext(), cr, rr,
-              (Class<? extends IBaseResource>) ((IBaseResource) object).getClass()));
-          //registerProvider(new FederatedReadProvider(this.getFhirContext(), cr, rr, (Class<? extends IBaseResource>) base));
+        ourLog.info("Loading {}", ((IBaseResource) object).getClass().getSimpleName());
+        registerProvider(
+            new FederatedReadProvider(
+                this.getFhirContext(),
+                cr,
+                rr,
+                (Class<? extends IBaseResource>) ((IBaseResource) object).getClass()));
+        registerProvider(
+            new FederatedCreateProvider(
+                this.getFhirContext(),
+                cr,
+                rr,
+                (Class<? extends IBaseResource>) ((IBaseResource) object).getClass()));
+        // registerProvider(new FederatedReadProvider(this.getFhirContext(), cr, rr, (Class<?
+        // extends IBaseResource>) base));
 
-      } catch (IllegalArgumentException
-               | SecurityException e) {
+      } catch (IllegalArgumentException | SecurityException e) {
         ourLog.info(e.getMessage());
       }
-
     }
 
     registerProvider(new CapabilityStatementProvider(cr, rr));
@@ -89,22 +108,28 @@ public class FederatorRestfulServer extends RestfulServer {
   }
 
   private List<?> getModelClasses() {
-    var clazzes = getFhirContext().getResourceTypes().stream().map(s -> {
-      try {
-        if ("List".equalsIgnoreCase(s)) {
-          return Class.forName(ORG_HL_7_FHIR_R_4_MODEL_PREFIX + s + "Resource")
-              .getDeclaredConstructor().newInstance();
-        }
-        return Class.forName(ORG_HL_7_FHIR_R_4_MODEL_PREFIX + s).getDeclaredConstructor()
-            .newInstance();
-      } catch (ClassNotFoundException | NoSuchMethodException | InstantiationException |
-               IllegalAccessException | InvocationTargetException e) {
-        throw new RuntimeException(e.getMessage(), e);
-
-      }
-    }).collect(Collectors.toList());
+    var clazzes =
+        getFhirContext().getResourceTypes().stream()
+            .map(
+                s -> {
+                  try {
+                    if ("List".equalsIgnoreCase(s)) {
+                      return Class.forName(ORG_HL_7_FHIR_R_4_MODEL_PREFIX + s + "Resource")
+                          .getDeclaredConstructor()
+                          .newInstance();
+                    }
+                    return Class.forName(ORG_HL_7_FHIR_R_4_MODEL_PREFIX + s)
+                        .getDeclaredConstructor()
+                        .newInstance();
+                  } catch (ClassNotFoundException
+                      | NoSuchMethodException
+                      | InstantiationException
+                      | IllegalAccessException
+                      | InvocationTargetException e) {
+                    throw new RuntimeException(e.getMessage(), e);
+                  }
+                })
+            .collect(Collectors.toList());
     return clazzes;
   }
-
-
 }

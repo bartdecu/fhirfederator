@@ -15,6 +15,7 @@ import org.springframework.context.annotation.Configuration;
 public class FederatorProperties {
 
   List<ServerDesc> members;
+
   public List<ServerDesc> getMembers() {
     return members;
   }
@@ -33,8 +34,6 @@ public class FederatorProperties {
   public void setResources(Resources resources) {
     this.resources = resources;
   }
-
-  
 
   public static class Resources {
     List<ResourceConfig> default_;
@@ -69,47 +68,54 @@ public class FederatorProperties {
     }
   }
 
-  public static  class ResourceConfig {
+  public static class ResourceConfig {
 
     String server;
     Integer maxOr;
     String read;
     private String create;
     private String update;
-    
-    
+
     public String getRead() {
       return read;
     }
+
     public void setRead(String read) {
       this.read = read;
     }
+
     public void setCreate(String create) {
       this.create = create;
     }
+
     public void setUpdate(String update) {
       this.update = update;
     }
+
     public String getServer() {
-        return server;
+      return server;
     }
+
     public Integer getMaxOr() {
-        return maxOr;
+      return maxOr;
     }
+
     public void setServer(String url) {
       this.server = url;
     }
+
     public void setMaxOr(Integer maxOr) {
       this.maxOr = maxOr;
     }
+
     public String getCreate() {
-        return create;
+      return create;
     }
+
     public String getUpdate() {
-        return update;
+      return update;
     }
- 
-}
+  }
 
   public ServerDesc getSetup() {
     return setup;
@@ -118,5 +124,4 @@ public class FederatorProperties {
   public void setSetup(ServerDesc setup) {
     this.setup = setup;
   }
-
 }

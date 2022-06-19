@@ -13,24 +13,21 @@ import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
 
 public class FederatedReadProvider extends FederatedProvider {
 
-    public FederatedReadProvider(FhirContext ctx, ClientRegistry cr, ResourceRegistry rr, Class<? extends IBaseResource> br) {
-        super(ctx, cr, rr, br);
+  public FederatedReadProvider(
+      FhirContext ctx, ClientRegistry cr, ResourceRegistry rr, Class<? extends IBaseResource> br) {
+    super(ctx, cr, rr, br);
+  }
+
+  /** Simple implementation of the "read" method */
+  @Read(version = true)
+  public IBaseResource read(@IdParam IdType theId) {
+
+    Optional<IGenericClient> client = getClient(Read.class, null);
+
+    if (!client.isPresent()) {
+      throw new ResourceNotFoundException(theId);
     }
 
-    /**
-     * Simple implementation of the "read" method
-     */
-    @Read(version = true)
-    public IBaseResource read(@IdParam IdType theId) {
-
-        Optional<IGenericClient> client = getClient(Read.class,null);
-
-        if (!client.isPresent()) {
-            throw new ResourceNotFoundException(theId);
-        }
-
-        return client.get().read().resource(getResourceType()).withId(theId).execute();
-
-    }
-
+    return client.get().read().resource(getResourceType()).withId(theId).execute();
+  }
 }

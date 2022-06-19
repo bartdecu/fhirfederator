@@ -10,28 +10,23 @@ import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 
 public class ClientRegistry {
-    
-    private Map<String,IGenericClient> map = new LinkedHashMap<>();
 
-    public ClientRegistry(List<String> bases, FhirContext ctx){
+  private Map<String, IGenericClient> map = new LinkedHashMap<>();
 
-        bases.stream().forEach(base -> map.put(base,ctx.newRestfulGenericClient(base) ));
+  public ClientRegistry(List<String> bases, FhirContext ctx) {
 
-    }
+    bases.stream().forEach(base -> map.put(base, ctx.newRestfulGenericClient(base)));
+  }
 
-    IGenericClient getClient(String base){
-        return map.get(base);
-    }
+  IGenericClient getClient(String base) {
+    return map.get(base);
+  }
 
-    Collection<IGenericClient> getAll(){
-        return map.values();
-    }
+  Collection<IGenericClient> getAll() {
+    return map.values();
+  }
 
-    Set<String> getKeySet(){
-        return map.keySet();
-    }
-     
-
-
-    
+  Set<String> getKeySet() {
+    return map.keySet();
+  }
 }

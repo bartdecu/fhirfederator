@@ -1,6 +1,5 @@
 package ca.uhn.fhir.federator;
 
-
 import java.util.List;
 import java.util.Optional;
 
@@ -19,15 +18,17 @@ public class FhirPathR4WithResolver implements IFhirPath {
 
   private FHIRPathEngine myEngine;
 
-  public FhirPathR4WithResolver(FhirContext theCtx, ClientRegistry cr, ResourceRegistry rr) {   
+  public FhirPathR4WithResolver(FhirContext theCtx, ClientRegistry cr, ResourceRegistry rr) {
     IValidationSupport validationSupport = theCtx.getValidationSupport();
     myEngine = new FHIRPathEngine(new HapiWorkerContext(theCtx, validationSupport));
-    myEngine.setHostServices(new EvaluationContextWithResolver(myEngine.getHostServices(),theCtx, cr, rr));
+    myEngine.setHostServices(
+        new EvaluationContextWithResolver(myEngine.getHostServices(), theCtx, cr, rr));
   }
 
   @SuppressWarnings("unchecked")
   @Override
-  public <T extends IBase> List<T> evaluate(IBase theInput, String thePath, Class<T> theReturnType) {
+  public <T extends IBase> List<T> evaluate(
+      IBase theInput, String thePath, Class<T> theReturnType) {
     List<Base> result;
     try {
       result = myEngine.evaluate((Base) theInput, thePath);
@@ -37,7 +38,13 @@ public class FhirPathR4WithResolver implements IFhirPath {
 
     for (Base next : result) {
       if (!theReturnType.isAssignableFrom(next.getClass())) {
-        throw new FhirPathExecutionException("FluentPath expression \"" + thePath + "\" returned unexpected type " + next.getClass().getSimpleName() + " - Expected " + theReturnType.getName());
+        throw new FhirPathExecutionException(
+            "FluentPath expression \""
+                + thePath
+                + "\" returned unexpected type "
+                + next.getClass().getSimpleName()
+                + " - Expected "
+                + theReturnType.getName());
       }
     }
 
@@ -45,7 +52,8 @@ public class FhirPathR4WithResolver implements IFhirPath {
   }
 
   @Override
-  public <T extends IBase> Optional<T> evaluateFirst(IBase theInput, String thePath, Class<T> theReturnType) {
+  public <T extends IBase> Optional<T> evaluateFirst(
+      IBase theInput, String thePath, Class<T> theReturnType) {
     return evaluate(theInput, thePath, theReturnType).stream().findFirst();
   }
 
@@ -53,6 +61,4 @@ public class FhirPathR4WithResolver implements IFhirPath {
   public void parse(String theExpression) {
     myEngine.parse(theExpression);
   }
-
-
 }

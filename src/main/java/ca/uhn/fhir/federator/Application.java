@@ -2,7 +2,6 @@ package ca.uhn.fhir.federator;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchRestClientAutoConfiguration;
 import org.springframework.boot.web.servlet.ServletRegistrationBean;
@@ -18,12 +17,9 @@ public class Application {
     SpringApplication.run(Application.class, args);
   }
 
-  
   @Bean
   public ServletRegistrationBean<RestfulServer> fhirServlet() {
     return new ServletRegistrationBean<RestfulServer>(
         new FederatorRestfulServer(configuration), "/fhir/*");
   }
-  
-  
 }

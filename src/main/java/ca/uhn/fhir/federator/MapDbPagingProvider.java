@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -28,109 +27,102 @@ import ca.uhn.fhir.rest.server.SimpleBundleProvider;
 
 public class MapDbPagingProvider implements IPagingProvider {
 
-    public static class ListIBaseResourceSerializer implements Serializer<List<IBaseResource>> {
-        private FhirContext ctx;
-
-        public ListIBaseResourceSerializer(FhirContext ctx) {
-            this.ctx = ctx;
-        }
-
-        @Override
-        public void serialize(DataOutput2 out, List<IBaseResource> value) throws IOException {
-
-            IVersionSpecificBundleFactory fac = ctx.newBundleFactory();
-            fac.addResourcesToBundle(value, BundleTypeEnum.COLLECTION, null, null, null);
-
-            // Instantiate a new JSON parser
-            IParser parser = ctx.newJsonParser();
-
-            // Serialize it
-            String serialized = parser.encodeResourceToString(fac.getResourceBundle());
-
-            out.writeUTF(serialized);
-
-        }
-
-        @Override
-        public List<IBaseResource> deserialize(DataInput2 input, int available) throws IOException {
-            String theMessageString = input.readUTF();
-            IParser parser = ctx.newJsonParser();
-            Bundle bundle = (Bundle) parser.parseResource(theMessageString);
-            return bundle.getEntry().stream().map(x -> x.getResource()).collect(Collectors.toList());
-        }
-
-    }
-
-    private int defaultPageSize;
-    private int maximumPageSize;
-    private DB db;
+  public static class ListIBaseResourceSerializer implements Serializer<List<IBaseResource>> {
     private FhirContext ctx;
-    HTreeMap<String, List<IBaseResource>> map;
-    private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(MapDbPagingProvider.class);
 
-    public MapDbPagingProvider(FhirContext ctx, File file, int defaultPageSize, int maximumPageSize) {
-        this.defaultPageSize = defaultPageSize;
-        this.maximumPageSize = maximumPageSize;
-        this.ctx = ctx;
-        db = DBMaker
-                .fileDB(file.getAbsolutePath())
-                .fileMmapEnable()
-                .closeOnJvmShutdown()
-                .make();
-        map = db
-                .hashMap("paging", Serializer.STRING, new ListIBaseResourceSerializer(ctx))
-                .createOrOpen();
-
+    public ListIBaseResourceSerializer(FhirContext ctx) {
+      this.ctx = ctx;
     }
 
     @Override
-    public int getDefaultPageSize() {
-        return this.defaultPageSize;
+    public void serialize(DataOutput2 out, List<IBaseResource> value) throws IOException {
+
+      IVersionSpecificBundleFactory fac = ctx.newBundleFactory();
+      fac.addResourcesToBundle(value, BundleTypeEnum.COLLECTION, null, null, null);
+
+      // Instantiate a new JSON parser
+      IParser parser = ctx.newJsonParser();
+
+      // Serialize it
+      String serialized = parser.encodeResourceToString(fac.getResourceBundle());
+
+      out.writeUTF(serialized);
     }
 
     @Override
-    public int getMaximumPageSize() {
+    public List<IBaseResource> deserialize(DataInput2 input, int available) throws IOException {
+      String theMessageString = input.readUTF();
+      IParser parser = ctx.newJsonParser();
+      Bundle bundle = (Bundle) parser.parseResource(theMessageString);
+      return bundle.getEntry().stream().map(x -> x.getResource()).collect(Collectors.toList());
+    }
+  }
 
-        return maximumPageSize;
+  private int defaultPageSize;
+  private int maximumPageSize;
+  private DB db;
+  private FhirContext ctx;
+  HTreeMap<String, List<IBaseResource>> map;
+  private static final org.slf4j.Logger ourLog =
+      org.slf4j.LoggerFactory.getLogger(MapDbPagingProvider.class);
+
+  public MapDbPagingProvider(FhirContext ctx, File file, int defaultPageSize, int maximumPageSize) {
+    this.defaultPageSize = defaultPageSize;
+    this.maximumPageSize = maximumPageSize;
+    this.ctx = ctx;
+    db = DBMaker.fileDB(file.getAbsolutePath()).fileMmapEnable().closeOnJvmShutdown().make();
+    map =
+        db.hashMap("paging", Serializer.STRING, new ListIBaseResourceSerializer(ctx))
+            .createOrOpen();
+  }
+
+  @Override
+  public int getDefaultPageSize() {
+    return this.defaultPageSize;
+  }
+
+  @Override
+  public int getMaximumPageSize() {
+
+    return maximumPageSize;
+  }
+
+  @Override
+  public IBundleProvider retrieveResultList(RequestDetails theRequestDetails, String theSearchId) {
+    SimpleBundleProvider retVal = null;
+
+    try {
+      retVal = new SimpleBundleProvider(map.getOrDefault(theSearchId, Collections.emptyList()));
+    } catch (Exception e) {
+      ourLog.error(e.getMessage(), e);
+    } finally {
+      // map.close();
+      // db.close();
     }
 
-    @Override
-    public IBundleProvider retrieveResultList(RequestDetails theRequestDetails, String theSearchId) {
-        SimpleBundleProvider retVal = null;
+    return retVal;
+  }
 
-        try {
-            retVal = new SimpleBundleProvider(map.getOrDefault(theSearchId, Collections.emptyList()));
-        } catch (Exception e) {
-            ourLog.error(e.getMessage(), e);
-        } finally {
-            // map.close();
-            // db.close();
-        }
+  @Override
+  public String storeResultList(RequestDetails theRequestDetails, IBundleProvider theList) {
+    UUID uuid = UUID.randomUUID();
+    String id = uuid.toString();
 
-        return retVal;
+    try {
+
+      map.put(id, theList.getAllResources());
+
+    } catch (Exception e) {
+      ourLog.error(e.getMessage(), e);
+    } finally {
+      // map.close();
+      // db.close();
     }
 
-    @Override
-    public String storeResultList(RequestDetails theRequestDetails, IBundleProvider theList) {
-        UUID uuid = UUID.randomUUID();
-        String id = uuid.toString();
+    return id;
+  }
 
-        try {
-
-            map.put(id, theList.getAllResources());
-
-        } catch (Exception e) {
-            ourLog.error(e.getMessage(), e);
-        } finally {
-            // map.close();
-            // db.close();
-        }
-
-        return id;
-    }
-
-    protected void finalize() {
-        db.close();
-    }
-
+  protected void finalize() {
+    db.close();
+  }
 }

@@ -10,22 +10,21 @@ import ca.uhn.fhir.rest.client.api.IGenericClient;
 
 public class CapabilityStatementProvider {
 
-    private ResourceRegistry rr;
-    private ClientRegistry cr;
+  private ResourceRegistry rr;
+  private ClientRegistry cr;
 
-    public CapabilityStatementProvider(ClientRegistry cr, ResourceRegistry rr){
-        this.cr = cr;
-        this.rr = rr;
-    }
-
-    @Metadata
-    public CapabilityStatement getServerMetadata() {
-        List<ResourceConfig> servers = rr.getServer4Resource("metadata");
-        //get first metadata
-        ResourceConfig server = servers.get(0);
-        IGenericClient client = cr.getClient(server.getServer());
-
-        return client.capabilities().ofType(CapabilityStatement.class).execute();
-    }
-  
+  public CapabilityStatementProvider(ClientRegistry cr, ResourceRegistry rr) {
+    this.cr = cr;
+    this.rr = rr;
   }
+
+  @Metadata
+  public CapabilityStatement getServerMetadata() {
+    List<ResourceConfig> servers = rr.getServer4Resource("metadata");
+    // get first metadata
+    ResourceConfig server = servers.get(0);
+    IGenericClient client = cr.getClient(server.getServer());
+
+    return client.capabilities().ofType(CapabilityStatement.class).execute();
+  }
+}

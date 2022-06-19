@@ -34,7 +34,8 @@ import ca.uhn.fhir.rest.api.server.IBundleProvider;
 import ca.uhn.fhir.rest.server.exceptions.InvalidRequestException;
 
 public class FederatedSearchProvider {
-  static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(FederatedSearchProvider.class);
+  static final org.slf4j.Logger ourLog =
+      org.slf4j.LoggerFactory.getLogger(FederatedSearchProvider.class);
 
   private ClientRegistry cr;
 
@@ -54,18 +55,22 @@ public class FederatedSearchProvider {
     this.ctx = ctx;
   }
 
-  public FederatedSearchProvider(ClientRegistry cr, ResourceRegistry rr, FhirContext ctx,
-      SearchParam2FhirPathRegistry s2f) {
+  public FederatedSearchProvider(
+      ClientRegistry cr, ResourceRegistry rr, FhirContext ctx, SearchParam2FhirPathRegistry s2f) {
     this.cr = cr;
     this.rr = rr;
     this.ctx = ctx;
     this.s2f = s2f;
-
   }
 
-  @Operation(name = "$doFederation", manualResponse = false, manualRequest = true, idempotent = true, global=true)
-  public IBundleProvider manualInputAndOutput(HttpServletRequest theServletRequest,
-      HttpServletResponse theServletResponse)
+  @Operation(
+      name = "$doFederation",
+      manualResponse = false,
+      manualRequest = true,
+      idempotent = true,
+      global = true)
+  public IBundleProvider manualInputAndOutput(
+      HttpServletRequest theServletRequest, HttpServletResponse theServletResponse)
       throws IOException {
     String contentType = theServletRequest.getContentType();
     byte[] bytes = IOUtils.toByteArray(theServletRequest.getInputStream());
@@ -74,12 +79,13 @@ public class FederatedSearchProvider {
     StringBuffer requestUrl = theServletRequest.getRequestURL();
     String tenantAndResource = StringUtils.defaultString(theServletRequest.getPathInfo());
     Enumeration<String> preferHeaders = theServletRequest.getHeaders("Prefer");
-    for (String preferHeader = null;preferHeaders.hasMoreElements();preferHeader = preferHeaders.nextElement()){
-      if("handling=strict".equals(preferHeader)){
+    for (String preferHeader = null;
+        preferHeaders.hasMoreElements();
+        preferHeader = preferHeaders.nextElement()) {
+      if ("handling=strict".equals(preferHeader)) {
         this.handlingStrict = true;
       }
-    }    
-
+    }
 
     if (ourLog.isTraceEnabled()) {
       ourLog.trace("Request FullPath: {}", requestFullPath);
@@ -91,11 +97,10 @@ public class FederatedSearchProvider {
     IBundleProvider result = doWithASTQueryAnalysis(theServletRequest, tenantAndResource);
 
     return result;
-
   }
 
-  private IBundleProvider doWithASTQueryAnalysis(HttpServletRequest theServletRequest, String tenantAndResource)
-      throws IOException {
+  private IBundleProvider doWithASTQueryAnalysis(
+      HttpServletRequest theServletRequest, String tenantAndResource) throws IOException {
     // TODO split tenant and resource
     String toParse;
     if (StringUtils.isNotBlank(theServletRequest.getQueryString())) {
@@ -130,49 +135,65 @@ public class FederatedSearchProvider {
 
   private Node createAST(FhirUrlAnalyser visitor) {
 
-    List<Node> perParameter = visitor.getAndParameters()
-        .stream()
-        .map(httpParam -> createPartialUrls(handlingStrict, false, httpParam, visitor, s2f))
-        .map(partialUrls -> new ParameterNode(partialUrls, rr, cr, ctx, s2f))
-        .collect(Collectors.toList());
+    List<Node> perParameter =
+        visitor.getAndParameters().stream()
+            .map(httpParam -> createPartialUrls(handlingStrict, false, httpParam, visitor, s2f))
+            .map(partialUrls -> new ParameterNode(partialUrls, rr, cr, ctx, s2f))
+            .collect(Collectors.toList());
 
     AndNode and = new AndNode(perParameter);
 
-    List<ParameterNode> perIncludeParameter = visitor.getIncludeParameters()
-        .stream()
-        .map(httpParam -> createPartialUrls(handlingStrict, true, httpParam, visitor, s2f))
-        .map(partialUrls -> new ParameterNode(partialUrls, rr, cr, ctx, s2f))
-        .collect(Collectors.toList());
+    List<ParameterNode> perIncludeParameter =
+        visitor.getIncludeParameters().stream()
+            .map(httpParam -> createPartialUrls(handlingStrict, true, httpParam, visitor, s2f))
+            .map(partialUrls -> new ParameterNode(partialUrls, rr, cr, ctx, s2f))
+            .collect(Collectors.toList());
 
     List<Node> chain = new ArrayList<>();
     chain.add(and);
     chain.addAll(perIncludeParameter);
-    Node include = chain.stream().reduce((a, b) -> new IncludeNode(a, (ParameterNode) b)).orElse(NoopNode.EMPTY);
+    Node include =
+        chain.stream()
+            .reduce((a, b) -> new IncludeNode(a, (ParameterNode) b))
+            .orElse(NoopNode.EMPTY);
 
     return include;
-
   }
 
-  private List<ParsedUrl> createPartialUrls(boolean handlingStrict, boolean dependent,ParserRuleContext httpParam, FhirUrlAnalyser visitor, SearchParam2FhirPathRegistry s2f) {
+  private List<ParsedUrl> createPartialUrls(
+      boolean handlingStrict,
+      boolean dependent,
+      ParserRuleContext httpParam,
+      FhirUrlAnalyser visitor,
+      SearchParam2FhirPathRegistry s2f) {
     return visitor.getResourcesForHttpParam(dependent, httpParam).stream()
         .map(resourceInParam -> new ParsedUrlCreator(resourceInParam, httpParam).createUrl())
-        .flatMap(opt -> opt.isPresent() ? Arrays.<ParsedUrl>asList(opt.get()).stream() : Stream.<ParsedUrl>empty())
+        .flatMap(
+            opt ->
+                opt.isPresent()
+                    ? Arrays.<ParsedUrl>asList(opt.get()).stream()
+                    : Stream.<ParsedUrl>empty())
         .map(parsedUrl -> validateKey(parsedUrl, handlingStrict, s2f))
         .collect(Collectors.toList());
   }
 
-  private ParsedUrl validateKey(ParsedUrl parsedUrl, boolean handlingStrict, SearchParam2FhirPathRegistry s2f) {
-      boolean ok = CollectionUtils.isEmpty(parsedUrl.getKey());
-      if (!ok){ 
-        ok = s2f.searchParamExists(parsedUrl.getResource(), parsedUrl.getKey().get(0));
-      }
-      if(!ok && handlingStrict){
-        throw new InvalidRequestException(String.format("SearchParam {} does not exist for resource {}", parsedUrl.getKey().get(0), parsedUrl.getResource()));
-      } if (!ok && !handlingStrict){
-        return new ParsedUrl(parsedUrl.getResource());
-      } else {
-        return parsedUrl;
-      }
-
+  private ParsedUrl validateKey(
+      ParsedUrl parsedUrl, boolean handlingStrict, SearchParam2FhirPathRegistry s2f) {
+    boolean ok = CollectionUtils.isEmpty(parsedUrl.getKey());
+    if (!ok) {
+      ok = s2f.searchParamExists(parsedUrl.getResource(), parsedUrl.getKey().get(0));
+    }
+    if (!ok && handlingStrict) {
+      throw new InvalidRequestException(
+          String.format(
+              "SearchParam {} does not exist for resource {}",
+              parsedUrl.getKey().get(0),
+              parsedUrl.getResource()));
+    }
+    if (!ok && !handlingStrict) {
+      return new ParsedUrl(parsedUrl.getResource());
+    } else {
+      return parsedUrl;
+    }
   }
 }

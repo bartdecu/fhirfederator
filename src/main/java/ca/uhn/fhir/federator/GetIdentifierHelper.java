@@ -8,7 +8,8 @@ import org.hl7.fhir.r4.model.Identifier;
 
 public class GetIdentifierHelper {
 
-  private  Method getIdentifier;
+  private Method getIdentifier;
+
   public GetIdentifierHelper(Class<?> clazz) {
     Method m = null;
     try {
@@ -21,10 +22,10 @@ public class GetIdentifierHelper {
 
   /* Call this method instead from your code. */
   @SuppressWarnings("unchecked")
-  public  List<Identifier> getIdentifier(Object resource) {
+  public List<Identifier> getIdentifier(Object resource) {
     if (getIdentifier != null) {
       try {
-        
+
         return ((List<Identifier>) getIdentifier.invoke(resource));
       } catch (Exception e) {
         // doesn't matter

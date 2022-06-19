@@ -14,27 +14,27 @@ import ca.uhn.fhir.rest.server.exceptions.UnprocessableEntityException;
 
 public class FederatedCreateProvider extends FederatedProvider {
 
-    /**
-     * Constructor
-     * 
-     * @param rr
-     * @param cr
-     */
-    public FederatedCreateProvider(FhirContext ctx, ClientRegistry cr, ResourceRegistry rr,
-            Class<? extends IBaseResource> br) {
-        super(ctx, cr, rr, br);
+  /**
+   * Constructor
+   *
+   * @param rr
+   * @param cr
+   */
+  public FederatedCreateProvider(
+      FhirContext ctx, ClientRegistry cr, ResourceRegistry rr, Class<? extends IBaseResource> br) {
+    super(ctx, cr, rr, br);
+  }
+
+  @Create
+  public MethodOutcome createPatient(@ResourceParam IBaseResource resource) {
+
+    Optional<IGenericClient> client = getClient(Create.class, resource);
+
+    if (!client.isPresent()) {
+      throw new UnprocessableEntityException(
+          Msg.code(636) + "No memberserver available for the creation of this resource");
     }
 
-    @Create
-    public MethodOutcome createPatient(@ResourceParam IBaseResource resource) {
-
-        Optional<IGenericClient> client = getClient(Create.class, resource);
-
-        if (!client.isPresent()){
-            throw new UnprocessableEntityException(Msg.code(636) + "No memberserver available for the creation of this resource");
-        }
-
-        return client.get().create().resource(resource).execute();
-    }
-
+    return client.get().create().resource(resource).execute();
+  }
 }
