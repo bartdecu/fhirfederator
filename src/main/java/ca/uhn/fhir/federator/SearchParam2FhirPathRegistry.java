@@ -25,4 +25,8 @@ public class SearchParam2FhirPathRegistry {
         }
         return retVal;
     }
+
+    boolean searchParamExists(String resource, String searchParam){
+        return searchParam2FhirPath.get(resource + "." +searchParam)!=null;
+    }
 }

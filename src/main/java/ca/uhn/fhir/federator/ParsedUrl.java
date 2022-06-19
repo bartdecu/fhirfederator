@@ -1,5 +1,6 @@
 package ca.uhn.fhir.federator;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.collections4.keyvalue.DefaultMapEntry;
@@ -7,7 +8,7 @@ import org.apache.commons.lang3.StringUtils;
 
 public class ParsedUrl {
     String resource;
-    String key;
+    List<String> key;
     String value;
     DefaultMapEntry<String, List<String>> placeholder;
     private boolean iterate;
@@ -19,27 +20,27 @@ public class ParsedUrl {
         this.iterate = iterate;
     }
 
-    public ParsedUrl(String resource, String key, String value) {
+    public ParsedUrl(String resource, List<String> key, String value) {
         this(false, resource, key, value, null, null);
     }
     
-    public ParsedUrl(String resource, String key, String placeholderResource, List<String> placeholderKey) {
+    public ParsedUrl(String resource, List<String> key, String placeholderResource, List<String> placeholderKey) {
         this(false, resource, key, null, placeholderResource, placeholderKey);
     }
 
-    public ParsedUrl(boolean iterate, String resource, String key, String placeholderResource, List<String> placeholderKey) {
+    public ParsedUrl(boolean iterate, String resource, List<String> key, String placeholderResource, List<String> placeholderKey) {
         this(iterate, resource, key, null, placeholderResource, placeholderKey);
     }
 
     
     public ParsedUrl(String resource, String technicalId) {
-        this(resource, "_id",technicalId);
+        this(resource, Arrays.asList("_id"),technicalId);
     }
     public ParsedUrl(String resource) {
         this.resource = resource;
     }
 
-    private ParsedUrl(boolean iterate, String resource, String key, String value, String placeholderResource, List<String> placeholderKey) {
+    private ParsedUrl(boolean iterate, String resource, List<String> key, String value, String placeholderResource, List<String> placeholderKey) {
         this.iterate = iterate;
         this.resource = resource;
         this.key = key;
@@ -57,11 +58,15 @@ public class ParsedUrl {
     public void setResource(String resource) {
         this.resource = resource;
     }
-    public String getKey() {
+    public List<String> getKey() {
         return key;
     }
-    public void setKey(String key) {
+    public void setKey(List<String> key) {
         this.key = key;
+    }
+
+    public String getKeyAsString(){
+        return StringUtils.join(this.key,".");
     }
     public String getValue() {
         return value;
@@ -77,10 +82,10 @@ public class ParsedUrl {
     }
     public String toString(){
         String retVal = this.resource; 
-        if (this.key != null){
-         retVal = retVal + '?' + this.key;
+        if (this.key != null && !this.key.isEmpty()){
+         retVal = retVal + '?' + StringUtils.join(this.key,".");
         }
-        if (this.key != null && (this.value != null || this.placeholder != null)){
+        if (this.key != null&& !this.key.isEmpty() && (this.value != null || this.placeholder != null)){
             retVal += "=";
             if (this.value != null){
                 retVal += value;
@@ -93,10 +98,30 @@ public class ParsedUrl {
 
     }
 
+    
+
+    public boolean isExecutable() {
+        //resource mag nooit leeg zijn
+        if (StringUtils.isEmpty(this.resource)){
+            return false;
+        }
+        //key en value samen mogen leeg zijn
+        if ((this.key==null || this.key.isEmpty()) && StringUtils.isEmpty(this.value)){
+            return true;
+        }
+        //key en value mogen samen opgevuld zijn
+        if (this.key != null && !this.key.isEmpty() && !StringUtils.isEmpty(this.value)){
+            return true;
+        }
+        //de rest mag niet
+        return false;        
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
+        result = prime * result + (iterate ? 1231 : 1237);
         result = prime * result + ((key == null) ? 0 : key.hashCode());
         result = prime * result + ((placeholder == null) ? 0 : placeholder.hashCode());
         result = prime * result + ((resource == null) ? 0 : resource.hashCode());
@@ -113,6 +138,8 @@ public class ParsedUrl {
         if (getClass() != obj.getClass())
             return false;
         ParsedUrl other = (ParsedUrl) obj;
+        if (iterate != other.iterate)
+            return false;
         if (key == null) {
             if (other.key != null)
                 return false;
@@ -136,22 +163,7 @@ public class ParsedUrl {
         return true;
     }
 
-    public boolean isExecutable() {
-        //resource mag nooit leeg zijn
-        if (StringUtils.isEmpty(this.resource)){
-            return false;
-        }
-        //key en value samen mogen leeg zijn
-        if (StringUtils.isEmpty(this.key) && StringUtils.isEmpty(this.value)){
-            return true;
-        }
-        //key en value mogen samen opgevuld zijn
-        if (!StringUtils.isEmpty(this.key) && !StringUtils.isEmpty(this.value)){
-            return true;
-        }
-        //de rest mag niet
-        return false;        
-    }
+    
     
     
 }
