@@ -43,12 +43,16 @@ public class FederatorRestfulServer extends RestfulServer {
     }
     SearchParam2FhirPathRegistry s2f = new SearchParam2FhirPathRegistry();
 
-    String url = configuration.getSetup().getUrl() + "/SearchParameter";
+    String url = configuration.getSetup().getUrl();
+    String dummy = rr.getServer4Resource("metadata").get(0).getServer();
     do {
       Bundle searchParameters =
-          cr.getClient(configuration.getSetup().getUrl())
+          cr.getClient(dummy)
               .search()
               .byUrl(url)
+              .accept(
+                  "application/json;q=1.0;application/fhir+xml;q=1.0, application/fhir+json;q=1.0,"
+                      + " application/xml+fhir;q=0.9, application/json+fhir;q=0.9")
               .returnBundle(Bundle.class)
               .execute();
 
