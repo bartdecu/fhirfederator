@@ -25,5 +25,6 @@ federator:
       metadata:
         - server: "https://server.fire.ly/R4"
   setup:
-    url: "https://server.fire.ly/R4"
-#    url: "https://hapi.fhir.org/baseR4"
+    url: "https://www.hl7.org/fhir/search-parameters.json"
+#    url: "https://server.fire.ly/R4/SearchParameter"
+#    url: "https://hapi.fhir.org/baseR4/SearchParameter"
