@@ -50,7 +50,9 @@ public class FederatorRestfulServer extends RestfulServer {
           cr.getClient(dummy)
               .search()
               .byUrl(url)
-              .accept("application/json;q=1.0;application/fhir+xml;q=1.0, application/fhir+json;q=1.0, application/xml+fhir;q=0.9, application/json+fhir;q=0.9")
+              .accept(
+                  "application/json;q=1.0;application/fhir+xml;q=1.0, application/fhir+json;q=1.0,"
+                      + " application/xml+fhir;q=0.9, application/json+fhir;q=0.9")
               .returnBundle(Bundle.class)
               .execute();
 
