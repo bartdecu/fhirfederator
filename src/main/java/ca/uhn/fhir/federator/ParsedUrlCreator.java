@@ -11,7 +11,7 @@ import ca.uhn.fhir.federator.FhirUrlParser.JContext;
 import ca.uhn.fhir.federator.FhirUrlParser.KContext;
 import ca.uhn.fhir.federator.FhirUrlParser.MContext;
 import ca.uhn.fhir.federator.FhirUrlParser.PContext;
-import ca.uhn.fhir.federator.FhirUrlParser.RContext;
+import ca.uhn.fhir.federator.FhirUrlParser.EContext;
 import ca.uhn.fhir.federator.FhirUrlParser.SContext;
 import ca.uhn.fhir.federator.FhirUrlParser.VContext;
 
@@ -26,7 +26,7 @@ public class ParsedUrlCreator {
 
   public Optional<ParsedUrl> createUrl() {
     ParserRuleContext parent = resourceCtx.getParent();
-    String resource = ((FContext) resourceCtx).IDENTIFIER().getText();
+    String resource = ((FContext) resourceCtx).IDENTIFIER()==null?null:((FContext) resourceCtx).IDENTIFIER().getText();
     ParsedUrl url = null;
 
     String clazz = parent.getClass().getSimpleName();
@@ -57,7 +57,7 @@ public class ParsedUrlCreator {
           url =
               new ParsedUrl(
                   resource,
-                  Arrays.asList(((VContext) parent).e().IDENTIFIER().getText(), "identifier"),
+                  Arrays.asList(((VContext) parent).e().x().IDENTIFIER().getText(), "identifier"),
                   ((SContext) ref).a().f().IDENTIFIER().getText(),
                   Arrays.asList("identifier"));
         } else {
@@ -75,14 +75,14 @@ public class ParsedUrlCreator {
             case "JContext":
               target = Arrays.asList(((JContext) parent2).l().IDENTIFIER().getText(), "identifier");
               break;
-            case "RContext":
+            case "EContext":
               target = Arrays.asList("identifier");
               break;
           }
           List<String> source = null;
           if (((JContext) parent).m().e() != null) {
             source =
-                Arrays.asList(((JContext) parent).m().e().IDENTIFIER().getText(), "identifier");
+                Arrays.asList(((JContext) parent).m().e().x().IDENTIFIER().getText(), "identifier");
           } else {
             source = Arrays.asList("identifier");
           }
@@ -108,7 +108,7 @@ public class ParsedUrlCreator {
         }
         break;
 
-      case "RContext":
+      case "EContext":
         FhirUrlAnalyser b = new FhirUrlAnalyser();
         parent.accept(b);
         if (b.getResources().get(0).size() > 1) {
@@ -126,9 +126,9 @@ public class ParsedUrlCreator {
           }
           PContext httpParam = (PContext) temp;
           List<String> key =
-              ((RContext) resourceCtx.getParent()).t() == null
+              ((EContext) resourceCtx.getParent()).e() == null
                   ? null
-                  : Arrays.asList(((RContext) resourceCtx.getParent()).t().getText());
+                  : Arrays.asList(((EContext) resourceCtx.getParent()).e().getText());
           String value = httpParam.d() == null ? null : httpParam.d().getText();
           url = new ParsedUrl(resource, key, value);
         }
@@ -147,7 +147,7 @@ public class ParsedUrlCreator {
                 if (((PContext) httpParam).k().e() != null) {
                   source =
                       Arrays.asList(
-                          ((PContext) httpParam).k().e().IDENTIFIER().getText(), "identifier");
+                          ((PContext) httpParam).k().e().x().IDENTIFIER().getText(), "identifier");
                   target = Arrays.asList("identifier");
                 } else {
                   String specialParameter = ((PContext) httpParam).k().q().SPECIAL().getText();
@@ -170,18 +170,18 @@ public class ParsedUrlCreator {
                     Arrays.asList(((JContext) parent2).l().IDENTIFIER().getText(), "identifier");
                 source = Arrays.asList("identifier");
                 break;
-              case "RContext":
+              case "EContext":
                 target =
                     Arrays.asList("identifier"); // ((RContext)parent2).t().IDENTIFIER().getText();
-                if (((RContext) parent2).getParent() instanceof KContext) {
+                if (((EContext) parent2).getParent() instanceof KContext) {
                   source =
                       Arrays.asList(
-                          ((KContext) ((RContext) parent2).getParent()).e().IDENTIFIER().getText(),
+                          ((KContext) ((EContext) parent2).getParent()).e().x().IDENTIFIER().getText(),
                           "identifier");
                 } else {
                   source =
                       Arrays.asList(
-                          ((MContext) ((RContext) parent2).getParent()).e().IDENTIFIER().getText(),
+                          ((MContext) ((EContext) parent2).getParent()).e().x().IDENTIFIER().getText(),
                           "identifier");
                 }
                 break;
@@ -190,7 +190,7 @@ public class ParsedUrlCreator {
                 new ParsedUrl(
                     resource,
                     source,
-                    ((FContext) c.getResources().get(0).get(0)).IDENTIFIER().getText(),
+                    ((FContext) c.getResources().get(0).get(0)).IDENTIFIER()==null?null:((FContext) c.getResources().get(0).get(0)).IDENTIFIER().getText(),
                     target);
           } else {
             List<String> source = Arrays.asList(httpParam.k().getText());

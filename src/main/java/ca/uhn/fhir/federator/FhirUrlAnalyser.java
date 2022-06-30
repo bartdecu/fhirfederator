@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import org.antlr.v4.runtime.ParserRuleContext;
 
 import ca.uhn.fhir.federator.FhirUrlParser.CContext;
+import ca.uhn.fhir.federator.FhirUrlParser.EContext;
 import ca.uhn.fhir.federator.FhirUrlParser.FContext;
 import ca.uhn.fhir.federator.FhirUrlParser.PContext;
 
@@ -83,7 +84,19 @@ public class FhirUrlAnalyser extends FhirUrlBaseVisitor<Object> {
     temp.add(ctx);
     return super.visitF(ctx);
   }
-
+  /*
+  @Override
+  public Object visitE(EContext ctx) {
+    while (resources.size() <= currentIndex) {
+      resources.add(new ArrayList<ParserRuleContext>());
+    }
+    List<ParserRuleContext> temp = resources.get(currentIndex);
+    if (ctx.x()!=null && ctx.f() == null && ctx.e()!=null){
+      temp.add(new FContext(ctx,-1));
+    }
+    return super.visitE(ctx);
+  }
+*/
   @Override
   public Object visitP(PContext ctx) {
     httpParams.add(ctx);
