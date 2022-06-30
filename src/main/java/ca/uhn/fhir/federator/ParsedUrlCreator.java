@@ -26,7 +26,10 @@ public class ParsedUrlCreator {
 
   public Optional<ParsedUrl> createUrl() {
     ParserRuleContext parent = resourceCtx.getParent();
-    String resource = ((FContext) resourceCtx).IDENTIFIER()==null?null:((FContext) resourceCtx).IDENTIFIER().getText();
+    String resource =
+        ((FContext) resourceCtx).IDENTIFIER() == null
+            ? null
+            : ((FContext) resourceCtx).IDENTIFIER().getText();
     ParsedUrl url = null;
 
     String clazz = parent.getClass().getSimpleName();
@@ -176,12 +179,20 @@ public class ParsedUrlCreator {
                 if (((EContext) parent2).getParent() instanceof KContext) {
                   source =
                       Arrays.asList(
-                          ((KContext) ((EContext) parent2).getParent()).e().x().IDENTIFIER().getText(),
+                          ((KContext) ((EContext) parent2).getParent())
+                              .e()
+                              .x()
+                              .IDENTIFIER()
+                              .getText(),
                           "identifier");
                 } else {
                   source =
                       Arrays.asList(
-                          ((MContext) ((EContext) parent2).getParent()).e().x().IDENTIFIER().getText(),
+                          ((MContext) ((EContext) parent2).getParent())
+                              .e()
+                              .x()
+                              .IDENTIFIER()
+                              .getText(),
                           "identifier");
                 }
                 break;
@@ -190,7 +201,9 @@ public class ParsedUrlCreator {
                 new ParsedUrl(
                     resource,
                     source,
-                    ((FContext) c.getResources().get(0).get(0)).IDENTIFIER()==null?null:((FContext) c.getResources().get(0).get(0)).IDENTIFIER().getText(),
+                    ((FContext) c.getResources().get(0).get(0)).IDENTIFIER() == null
+                        ? null
+                        : ((FContext) c.getResources().get(0).get(0)).IDENTIFIER().getText(),
                     target);
           } else {
             List<String> source = Arrays.asList(httpParam.k().getText());
