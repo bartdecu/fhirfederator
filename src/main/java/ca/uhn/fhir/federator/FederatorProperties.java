@@ -128,11 +128,15 @@ public class FederatorProperties {
 
   public static class ServerResourceConfig {
 
-    String server;
-    Integer maxOr;
-    String read;
+    private String server;
+    private String read;
     private String create;
     private String update;
+    private String delete;
+
+    public void setDelete(String delete) {
+      this.delete = delete;
+    }
 
     public String getRead() {
       return read;
@@ -164,6 +168,10 @@ public class FederatorProperties {
 
     public String getUpdate() {
       return update;
+    }
+
+    public String getDelete() {
+        return delete;
     }
   }
 

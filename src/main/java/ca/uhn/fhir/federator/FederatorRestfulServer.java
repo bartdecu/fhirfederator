@@ -41,10 +41,9 @@ public class FederatorRestfulServer extends RestfulServer {
 
     // Create a context for the appropriate version
     setFhirContext(FhirContext.forR4());
-    ClientRegistry cr =
-        new ClientRegistry(
-            configuration.getMembers().stream().map(x -> x.getUrl()).collect(Collectors.toList()),
-            this.getFhirContext());
+    ClientRegistry cr = new ClientRegistry(
+        configuration.getMembers().stream().map(x -> x.getUrl()).collect(Collectors.toList()),
+        this.getFhirContext());
     ResourceRegistry rr = new ResourceRegistry(configuration.getResources().getDefault());
     for (Entry<String, ResourceConfig> entry : configuration.resources.other.entrySet()) {
 
@@ -87,6 +86,20 @@ public class FederatorRestfulServer extends RestfulServer {
                 cr,
                 rr,
                 (Class<? extends IBaseResource>) ((IBaseResource) object).getClass()));
+        registerProvider(
+            new FederatedUpdateProvider(
+                this.getFhirContext(),
+                cr,
+                rr,
+                s2f,
+                (Class<? extends IBaseResource>) ((IBaseResource) object).getClass()));
+        registerProvider(
+            new FederatedDeleteProvider(
+                this.getFhirContext(),
+                cr,
+                rr,
+                s2f,
+                (Class<? extends IBaseResource>) ((IBaseResource) object).getClass()));
 
       } catch (IllegalArgumentException | SecurityException e) {
         ourLog.info(e.getMessage());
@@ -110,28 +123,27 @@ public class FederatorRestfulServer extends RestfulServer {
   }
 
   private List<?> getModelClasses() {
-    var clazzes =
-        getFhirContext().getResourceTypes().stream()
-            .map(
-                s -> {
-                  try {
-                    if ("List".equalsIgnoreCase(s)) {
-                      return Class.forName(ORG_HL_7_FHIR_R_4_MODEL_PREFIX + s + "Resource")
-                          .getDeclaredConstructor()
-                          .newInstance();
-                    }
-                    return Class.forName(ORG_HL_7_FHIR_R_4_MODEL_PREFIX + s)
-                        .getDeclaredConstructor()
-                        .newInstance();
-                  } catch (ClassNotFoundException
-                      | NoSuchMethodException
-                      | InstantiationException
-                      | IllegalAccessException
-                      | InvocationTargetException e) {
-                    throw new RuntimeException(e.getMessage(), e);
-                  }
-                })
-            .collect(Collectors.toList());
+    var clazzes = getFhirContext().getResourceTypes().stream()
+        .map(
+            s -> {
+              try {
+                if ("List".equalsIgnoreCase(s)) {
+                  return Class.forName(ORG_HL_7_FHIR_R_4_MODEL_PREFIX + s + "Resource")
+                      .getDeclaredConstructor()
+                      .newInstance();
+                }
+                return Class.forName(ORG_HL_7_FHIR_R_4_MODEL_PREFIX + s)
+                    .getDeclaredConstructor()
+                    .newInstance();
+              } catch (ClassNotFoundException
+                  | NoSuchMethodException
+                  | InstantiationException
+                  | IllegalAccessException
+                  | InvocationTargetException e) {
+                throw new RuntimeException(e.getMessage(), e);
+              }
+            })
+        .collect(Collectors.toList());
     return clazzes;
   }
 
@@ -142,14 +154,13 @@ public class FederatorRestfulServer extends RestfulServer {
 
       HttpClientBuilder b = HttpClientBuilder.create();
       CloseableHttpClient client = b.build();
-      HttpUriRequest req =
-          new HttpGet(
-              Optional.<String>ofNullable(package_.getLocation())
-                      .orElse("https://packages2.fhir.org/packages")
-                  + "/"
-                  + Optional.<String>ofNullable(package_.getId()).orElse("hl7.fhir.r4.core")
-                  + "/"
-                  + Optional.<String>ofNullable(package_.getVersion()).orElse("4.0.1"));
+      HttpUriRequest req = new HttpGet(
+          Optional.<String>ofNullable(package_.getLocation())
+              .orElse("https://packages2.fhir.org/packages")
+              + "/"
+              + Optional.<String>ofNullable(package_.getId()).orElse("hl7.fhir.r4.core")
+              + "/"
+              + Optional.<String>ofNullable(package_.getVersion()).orElse("4.0.1"));
       response = client.execute(req);
       if (!(response.getStatusLine().getStatusCode() < 200)
           && !(response.getStatusLine().getStatusCode() > 299)) {
@@ -159,8 +170,7 @@ public class FederatorRestfulServer extends RestfulServer {
 
           for (String nextFile : packageFolder.listFiles()) {
             if (nextFile.toLowerCase(Locale.US).endsWith(".json")) {
-              String input =
-                  new String(packageFolder.getContent().get(nextFile), StandardCharsets.UTF_8);
+              String input = new String(packageFolder.getContent().get(nextFile), StandardCharsets.UTF_8);
               IBaseResource resource = getFhirContext().newJsonParser().parseResource(input);
               if (resource instanceof SearchParameter) {
                 sps.add((SearchParameter) resource);
@@ -185,31 +195,32 @@ public class FederatorRestfulServer extends RestfulServer {
     return sps;
   }
   /*
-  private List<SearchParameter> getSearchParametersFromConfig(
-      ResourceRegistry rr, ClientRegistry cr) {
-    List<SearchParameter> params = new ArrayList<>();
-    String url = configuration.getSetup().getUrl();
-    String dummy = rr.getServer4Resource("metadata").get(0).getServer();
-    do {
-      Bundle searchParameters =
-          cr.getClient(dummy)
-              .search()
-              .byUrl(url)
-              .accept(
-                  "application/json;q=1.0;application/fhir+xml;q=1.0, application/fhir+json;q=1.0,"
-                      + " application/xml+fhir;q=0.9, application/json+fhir;q=0.9")
-              .returnBundle(Bundle.class)
-              .execute();
-
-      searchParameters.getEntry().forEach(x -> params.add((SearchParameter) x.getResource()));
-
-      url =
-          searchParameters.getLink(IBaseBundle.LINK_NEXT) == null
-              ? null
-              : searchParameters.getLink(IBaseBundle.LINK_NEXT).getUrl();
-    } while (url != null);
-
-    return params;
-  }
-  */
+   * private List<SearchParameter> getSearchParametersFromConfig(
+   * ResourceRegistry rr, ClientRegistry cr) {
+   * List<SearchParameter> params = new ArrayList<>();
+   * String url = configuration.getSetup().getUrl();
+   * String dummy = rr.getServer4Resource("metadata").get(0).getServer();
+   * do {
+   * Bundle searchParameters =
+   * cr.getClient(dummy)
+   * .search()
+   * .byUrl(url)
+   * .accept(
+   * "application/json;q=1.0;application/fhir+xml;q=1.0, application/fhir+json;q=1.0,"
+   * + " application/xml+fhir;q=0.9, application/json+fhir;q=0.9")
+   * .returnBundle(Bundle.class)
+   * .execute();
+   * 
+   * searchParameters.getEntry().forEach(x -> params.add((SearchParameter)
+   * x.getResource()));
+   * 
+   * url =
+   * searchParameters.getLink(IBaseBundle.LINK_NEXT) == null
+   * ? null
+   * : searchParameters.getLink(IBaseBundle.LINK_NEXT).getUrl();
+   * } while (url != null);
+   * 
+   * return params;
+   * }
+   */
 }

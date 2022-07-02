@@ -7,6 +7,7 @@ import org.hl7.fhir.instance.model.api.IBaseResource;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.federator.FederatorProperties.ServerResourceConfig;
+import ca.uhn.fhir.rest.annotation.Delete;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.server.IResourceProvider;
 
@@ -32,6 +33,10 @@ public abstract class FederatedProvider implements IResourceProvider {
     this.rr = rr;
   }
 
+  public FhirContext getCtx() {
+    return ctx;
+  }
+
   @Override
   public Class<? extends IBaseResource> getResourceType() {
     return this.br;
@@ -51,5 +56,9 @@ public abstract class FederatedProvider implements IResourceProvider {
   private Boolean evaluate(Class<?> action, IBaseResource resource, ServerResourceConfig config) {
 
     return new ResourceConfigEvaluator(ctx, action, resource, config).execute();
+  }
+
+  protected Optional<IGenericClient> getClient(Class<Delete> delete) {
+    return getClient(delete, null);
   }
 }

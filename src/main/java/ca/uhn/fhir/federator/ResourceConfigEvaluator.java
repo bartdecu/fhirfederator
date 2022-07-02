@@ -10,6 +10,7 @@ import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.federator.FederatorProperties.ServerResourceConfig;
 import ca.uhn.fhir.fhirpath.IFhirPath;
 import ca.uhn.fhir.rest.annotation.Create;
+import ca.uhn.fhir.rest.annotation.Delete;
 import ca.uhn.fhir.rest.annotation.Read;
 import ca.uhn.fhir.rest.annotation.Update;
 
@@ -38,7 +39,9 @@ public class ResourceConfigEvaluator {
       toEval = config.getCreate();
     } else if (Update.class.equals(action)) {
       toEval = config.getUpdate();
-    } else {
+    } else if (Delete.class.equals(action)) {
+      toEval = config.getDelete();
+    }  else {
       return (Boolean) null;
     }
 
@@ -46,6 +49,11 @@ public class ResourceConfigEvaluator {
       return true;
     } else if (Boolean.TRUE.toString().equals(toEval) || Boolean.FALSE.toString().equals(toEval)) {
       return Boolean.parseBoolean(toEval);
+    } else if(Delete.class.equals(action)) {
+      //we do not have a resource to evaluate
+      //so if there is something else than true/false, this is an error
+      ourLog.error("Unexpected content for delete property: {} {}", config.getServer(), toEval);
+      return false;
     } else {
       try {
         IFhirPath fp = ctx.newFhirPath();
@@ -55,7 +63,7 @@ public class ResourceConfigEvaluator {
           return t.booleanValue();
         }
       } catch (RuntimeException e) {
-        ourLog.error(e.getMessage(), e);
+        ourLog.error("Unexpected content for fhirpath {} {} {}", toEval, e.getMessage(), e);
         return false;
       }
       return false;
