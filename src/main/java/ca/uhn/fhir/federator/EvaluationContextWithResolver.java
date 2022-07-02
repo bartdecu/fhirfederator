@@ -73,7 +73,7 @@ public class EvaluationContextWithResolver implements IEvaluationContext {
     List<String> servers;
     if (till < 1) {
       servers =
-          rr.getServer4Resource(resource).stream()
+          rr.getServer4Resource(resource).getLocations().stream()
               .map(x -> x.getServer())
               .collect(Collectors.toList());
     } else {
@@ -92,8 +92,8 @@ public class EvaluationContextWithResolver implements IEvaluationContext {
                                 .withUrl(url)
                                 .execute())
                         .stream();
-                  } catch (Exception e) {
-                    ourLog.error("Reference not resolved: {}", e.getMessage());
+                  } catch (Throwable e) {
+                    ourLog.error("Reference not resolved:{} {} {}",server, url, e.getMessage());
                     return Stream.<Base>empty();
                   }
                 })

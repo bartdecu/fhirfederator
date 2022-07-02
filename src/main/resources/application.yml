@@ -6,25 +6,34 @@ federator:
     - url: "https://blaze.life.uni-leipzig.de/fhir"
     - url: "https://hapi.fhir.org/baseR4"
   resources:
-    default: 
-      - server: "https://server.fire.ly/R4"
-      - server: "https://blaze.life.uni-leipzig.de/fhir"
-      - server: "https://hapi.fhir.org/baseR4"
+    default:
+      locations: 
+        - server: "https://server.fire.ly/R4"
+        - server: "https://blaze.life.uni-leipzig.de/fhir"
+        - server: "https://hapi.fhir.org/baseR4"
     other:  
       #Observation:
       #  - server:  "https://hapi.fhir.org/baseR4"
       Patient:
-        - server: "https://hapi.fhir.org/baseR4"
-          create: "Patient.name.family = \"Decuypere\""
-        - server: "https://server.fire.ly/R4"
-          read: true
+      # test AND test2 => [[test],[test2]]
+      # test OR test2 => [[test,test2]]
+      # yes, I know, you need also a NOT or XOR to express all possible boolean constructs, but took my inspiration from HTML parameters, and they do fine  
+        identifiers: [["https://github.com/projectcypress/cypress/patient" , "urn:oid:1.2.36.146.595.217.0.1"]]
+        locations:
+          - server: "https://hapi.fhir.org/baseR4"
+            create: "Patient.name.family = \"Decuypere\""
+          - server: "https://server.fire.ly/R4"
+            read: true
       Practitioner:
-        - server: "https://server.fire.ly/R4"
+        locations:
+          - server: "https://server.fire.ly/R4"
       AuditEvent:
-        - server: "https://hapi.fhir.org/baseR4"
+        locations:
+          - server: "https://hapi.fhir.org/baseR4"
       metadata:
-        - server: "https://server.fire.ly/R4"
+        locations:
+          - server: "https://server.fire.ly/R4"
   setup:
-    url: "https://www.hl7.org/fhir/search-parameters.json"
-#    url: "https://server.fire.ly/R4/SearchParameter"
-#    url: "https://hapi.fhir.org/baseR4/SearchParameter"
+    packages:
+      - id: hl7.fhir.r4.core
+        version: 4.0.1

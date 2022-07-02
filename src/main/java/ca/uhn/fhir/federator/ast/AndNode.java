@@ -5,15 +5,18 @@ import java.util.stream.Collectors;
 
 import org.hl7.fhir.instance.model.api.IBaseResource;
 
-import ca.uhn.fhir.federator.IBaseResourceIdentifierComparator;
+import ca.uhn.fhir.federator.IBaseResourcePredicate;
+import ca.uhn.fhir.federator.ResourceRegistry;
 import ca.uhn.fhir.rest.api.server.IBundleProvider;
 import ca.uhn.fhir.rest.server.SimpleBundleProvider;
 
 public class AndNode implements Node {
   private List<Node> nodes;
+  private ResourceRegistry rr;
 
-  public AndNode(List<Node> nodes) {
+  public AndNode(ResourceRegistry rr, List<Node> nodes) {
     this.nodes = nodes;
+    this.rr = rr;
   }
 
   @Override
@@ -30,19 +33,19 @@ public class AndNode implements Node {
                   if (bList.isEmpty()) {
                     return NoopNode.EMPTY;
                   }
-                  return new NoopNode(intersection(aList, bList));
+                  return new NoopNode(intersection(rr, aList, bList));
                 })
             .orElse(NoopNode.EMPTY);
     return new SimpleBundleProvider(andNode.execute().getAllResources());
   }
 
-  private List<IBaseResource> intersection(List<IBaseResource> list, List<IBaseResource> list2) {
+  private List<IBaseResource> intersection(ResourceRegistry rr, List<IBaseResource> list, List<IBaseResource> list2) {
     return list.stream()
         .distinct()
         .filter(
             x ->
                 list2.stream()
-                    .map(y -> new IBaseResourceIdentifierComparator().compare(x, y) == 0)
+                    .map(y -> new IBaseResourcePredicate(rr).test(x, y))
                     .reduce((a, b) -> a || b)
                     .orElse(false))
         .collect(Collectors.toList());

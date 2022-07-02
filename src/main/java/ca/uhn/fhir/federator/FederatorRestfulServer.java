@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -15,16 +16,16 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.hl7.fhir.instance.model.api.IBaseBundle;
 import org.hl7.fhir.instance.model.api.IBaseResource;
-import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.SearchParameter;
 import org.hl7.fhir.utilities.npm.NpmPackage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.federator.FederatorProperties.Package;
 import ca.uhn.fhir.federator.FederatorProperties.ResourceConfig;
+import ca.uhn.fhir.federator.FederatorProperties.Setup;
 import ca.uhn.fhir.rest.server.RestfulServer;
 import ca.uhn.fhir.rest.server.interceptor.ResponseHighlighterInterceptor;
 
@@ -45,15 +46,20 @@ public class FederatorRestfulServer extends RestfulServer {
             configuration.getMembers().stream().map(x -> x.getUrl()).collect(Collectors.toList()),
             this.getFhirContext());
     ResourceRegistry rr = new ResourceRegistry(configuration.getResources().getDefault());
-    for (Entry<String, List<ResourceConfig>> resourceUrl :
+    for (Entry<String, ResourceConfig> entry :
         configuration.resources.other.entrySet()) {
-      for (ResourceConfig resourceConfig : resourceUrl.getValue()) {
-        rr.putServer4Resource(resourceUrl.getKey(), resourceConfig);
-      }
+      
+        rr.putResourceConfig(entry.getKey(), entry.getValue());
+      
     }
     SearchParam2FhirPathRegistry s2f = new SearchParam2FhirPathRegistry();
-    List<SearchParameter> sps = getSearchParametersFromNpmPackage();
-    // sps.addAll(getSearchParametersFromConfig(rr,cr));
+    List<SearchParameter> sps = new ArrayList<>();
+    Setup setup = configuration.getSetup();
+    if (setup!=null){
+      for (Package package_: setup.getPackages()){
+        sps.addAll(getSearchParametersFromNpmPackage(package_));
+      }
+    }
 
     sps.forEach(
         sp -> {
@@ -64,11 +70,7 @@ public class FederatorRestfulServer extends RestfulServer {
                   });
         });
 
-    File pagingFile = new File(System.getProperty("java.io.tmpdir") + File.separator + "paging.db");
-
-    if (pagingFile.exists()) {
-      pagingFile.delete();
-    }
+    File pagingFile = setupPagingFile();
 
     List<?> clazzes = getModelClasses();
 
@@ -87,9 +89,6 @@ public class FederatorRestfulServer extends RestfulServer {
                 cr,
                 rr,
                 (Class<? extends IBaseResource>) ((IBaseResource) object).getClass()));
-        // registerProvider(new FederatedReadProvider(this.getFhirContext(), cr, rr,
-        // (Class<?
-        // extends IBaseResource>) base));
 
       } catch (IllegalArgumentException | SecurityException e) {
         ourLog.info(e.getMessage());
@@ -101,6 +100,15 @@ public class FederatorRestfulServer extends RestfulServer {
     setPagingProvider(new MapDbPagingProvider(this.getFhirContext(), pagingFile, 10, 100));
     registerInterceptor(new FederatorInterceptor());
     registerInterceptor(new ResponseHighlighterInterceptor());
+  }
+
+  private File setupPagingFile() {
+    File pagingFile = new File(System.getProperty("java.io.tmpdir") + File.separator + "paging.db");
+
+    if (pagingFile.exists()) {
+      pagingFile.delete();
+    }
+    return pagingFile;
   }
 
   private List<?> getModelClasses() {
@@ -129,7 +137,7 @@ public class FederatorRestfulServer extends RestfulServer {
     return clazzes;
   }
 
-  private List<SearchParameter> getSearchParametersFromNpmPackage() {
+  private List<SearchParameter> getSearchParametersFromNpmPackage(Package package_) {
     List<SearchParameter> sps = new ArrayList<>();
     CloseableHttpResponse response = null;
     try {
@@ -137,7 +145,12 @@ public class FederatorRestfulServer extends RestfulServer {
       HttpClientBuilder b = HttpClientBuilder.create();
       CloseableHttpClient client = b.build();
       HttpUriRequest req =
-          new HttpGet("https://packages2.fhir.org/packages/hl7.fhir.r4.core/4.0.1");
+          new HttpGet(Optional.<String>ofNullable(package_.getLocation()).orElse("https://packages2.fhir.org/packages")
+          + "/"
+          + Optional.<String>ofNullable(package_.getId()).orElse("hl7.fhir.r4.core")
+          + "/"
+          + Optional.<String>ofNullable(package_.getVersion()).orElse("4.0.1")
+          );
       response = client.execute(req);
       if (!(response.getStatusLine().getStatusCode() < 200)
           && !(response.getStatusLine().getStatusCode() > 299)) {
@@ -172,7 +185,7 @@ public class FederatorRestfulServer extends RestfulServer {
 
     return sps;
   }
-
+/*
   private List<SearchParameter> getSearchParametersFromConfig(
       ResourceRegistry rr, ClientRegistry cr) {
     List<SearchParameter> params = new ArrayList<>();
@@ -199,4 +212,5 @@ public class FederatorRestfulServer extends RestfulServer {
 
     return params;
   }
+  */
 }
