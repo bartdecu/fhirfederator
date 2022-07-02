@@ -26,15 +26,16 @@ public class IBaseResourcePredicate implements BiPredicate<IBaseResource, IBaseR
 
     List<List<String>> filter = rr.getServer4Resource(resource).getIdentifiers();
 
-    BiPredicate<List<Identifier>, List<Identifier>> identifierListPredicate = createPredicate(filter);
+    BiPredicate<List<Identifier>, List<Identifier>> identifierListPredicate =
+        createPredicate(filter);
     List<Identifier> o1Identifiers = new GetIdentifierHelper(o1.getClass()).getIdentifier(o1);
     List<Identifier> o2Identifiers = new GetIdentifierHelper(o2.getClass()).getIdentifier(o2);
 
     return identifierListPredicate.test(o1Identifiers, o2Identifiers);
-
   }
 
-  private BiPredicate<List<Identifier>, List<Identifier>> createPredicate(List<List<String>> filter) {
+  private BiPredicate<List<Identifier>, List<Identifier>> createPredicate(
+      List<List<String>> filter) {
 
     if (filter == null || filter.isEmpty()) {
       return (t, u) -> {
@@ -53,20 +54,20 @@ public class IBaseResourcePredicate implements BiPredicate<IBaseResource, IBaseR
     }
   }
 
-  private BiPredicate<List<Identifier>, List<Identifier>> createFilterPredicate(List<List<String>> filter) {
-    List<List<BiPredicate<List<Identifier>, List<Identifier>>>> bis = filter
-        .stream()
-        .map(
-            ors -> ors
-                .stream()
-                .map(id -> createBiPredicate(id))
-                .collect(Collectors.toList()))
-        .collect(Collectors.toList());
+  private BiPredicate<List<Identifier>, List<Identifier>> createFilterPredicate(
+      List<List<String>> filter) {
+    List<List<BiPredicate<List<Identifier>, List<Identifier>>>> bis =
+        filter.stream()
+            .map(ors -> ors.stream().map(id -> createBiPredicate(id)).collect(Collectors.toList()))
+            .collect(Collectors.toList());
 
-    List<BiPredicate<List<Identifier>, List<Identifier>>> bis2 = bis.stream()
-        .map(and -> and.stream().reduce((a, b) -> a.or(b)).orElse(FALSE)).collect(Collectors.toList());
+    List<BiPredicate<List<Identifier>, List<Identifier>>> bis2 =
+        bis.stream()
+            .map(and -> and.stream().reduce((a, b) -> a.or(b)).orElse(FALSE))
+            .collect(Collectors.toList());
 
-    BiPredicate<List<Identifier>, List<Identifier>> result = bis2.stream().reduce((a, b) -> a.and(b)).orElse(FALSE);
+    BiPredicate<List<Identifier>, List<Identifier>> result =
+        bis2.stream().reduce((a, b) -> a.and(b)).orElse(FALSE);
 
     return result;
   }
@@ -76,11 +77,18 @@ public class IBaseResourcePredicate implements BiPredicate<IBaseResource, IBaseR
       if (t == null || u == null || t.isEmpty() || u.isEmpty()) {
         return false;
       }
-      List<Identifier> tMatches = t.stream().filter(x -> system.equals(x.getSystem())).collect(Collectors.toList());
-      boolean result = u.stream().anyMatch(i -> tMatches.stream()
-          .anyMatch(tMatch -> tMatch.getSystem().equals(i.getSystem()) && tMatch.getValue().equals(i.getValue())));
+      List<Identifier> tMatches =
+          t.stream().filter(x -> system.equals(x.getSystem())).collect(Collectors.toList());
+      boolean result =
+          u.stream()
+              .anyMatch(
+                  i ->
+                      tMatches.stream()
+                          .anyMatch(
+                              tMatch ->
+                                  tMatch.getSystem().equals(i.getSystem())
+                                      && tMatch.getValue().equals(i.getValue())));
       return result;
     };
-
   }
 }

@@ -93,7 +93,7 @@ public class EvaluationContextWithResolver implements IEvaluationContext {
                                 .execute())
                         .stream();
                   } catch (Throwable e) {
-                    ourLog.error("Reference not resolved:{} {} {}",server, url, e.getMessage());
+                    ourLog.error("Reference not resolved:{} {} {}", server, url, e.getMessage());
                     return Stream.<Base>empty();
                   }
                 })

@@ -39,7 +39,8 @@ public class AndNode implements Node {
     return new SimpleBundleProvider(andNode.execute().getAllResources());
   }
 
-  private List<IBaseResource> intersection(ResourceRegistry rr, List<IBaseResource> list, List<IBaseResource> list2) {
+  private List<IBaseResource> intersection(
+      ResourceRegistry rr, List<IBaseResource> list, List<IBaseResource> list2) {
     return list.stream()
         .distinct()
         .filter(

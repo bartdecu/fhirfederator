@@ -25,7 +25,7 @@ public class ResourceRegistry {
   }
 
   void putResourceConfig(String resource, ResourceConfig config) {
-    map.put(resource,config);
+    map.put(resource, config);
   }
 
   public int getMaxOr4Resource(String resource) {

@@ -35,22 +35,27 @@ public class FederatorProperties {
     this.resources = resources;
   }
 
-  public static class ResourceConfig{
+  public static class ResourceConfig {
     List<List<String>> identifiers;
     List<ServerResourceConfig> locations;
     Integer maxOr;
+
     public void setMaxOr(Integer maxOr) {
       this.maxOr = maxOr;
     }
+
     public List<ServerResourceConfig> getLocations() {
       return locations;
     }
+
     public List<List<String>> getIdentifiers() {
       return identifiers;
     }
+
     public void setIdentifiers(List<List<String>> identifiers) {
       this.identifiers = identifiers;
     }
+
     public void setLocations(List<ServerResourceConfig> locations) {
       this.locations = locations;
     }
@@ -58,6 +63,7 @@ public class FederatorProperties {
     public Integer getMaxOr() {
       return null;
     }
+
     @Override
     public int hashCode() {
       final int prime = 31;
@@ -67,33 +73,24 @@ public class FederatorProperties {
       result = prime * result + ((maxOr == null) ? 0 : maxOr.hashCode());
       return result;
     }
+
     @Override
     public boolean equals(Object obj) {
-      if (this == obj)
-        return true;
-      if (obj == null)
-        return false;
-      if (getClass() != obj.getClass())
-        return false;
+      if (this == obj) return true;
+      if (obj == null) return false;
+      if (getClass() != obj.getClass()) return false;
       ResourceConfig other = (ResourceConfig) obj;
       if (identifiers == null) {
-        if (other.identifiers != null)
-          return false;
-      } else if (!identifiers.equals(other.identifiers))
-        return false;
+        if (other.identifiers != null) return false;
+      } else if (!identifiers.equals(other.identifiers)) return false;
       if (locations == null) {
-        if (other.locations != null)
-          return false;
-      } else if (!locations.equals(other.locations))
-        return false;
+        if (other.locations != null) return false;
+      } else if (!locations.equals(other.locations)) return false;
       if (maxOr == null) {
-        if (other.maxOr != null)
-          return false;
-      } else if (!maxOr.equals(other.maxOr))
-        return false;
+        if (other.maxOr != null) return false;
+      } else if (!maxOr.equals(other.maxOr)) return false;
       return true;
     }
-
   }
 
   public static class Resources {
@@ -178,7 +175,7 @@ public class FederatorProperties {
     this.setup = setup;
   }
 
-  public static class Setup{
+  public static class Setup {
     List<Package> packages;
 
     public List<Package> getPackages() {
@@ -188,28 +185,31 @@ public class FederatorProperties {
     public void setPackages(List<Package> packages) {
       this.packages = packages;
     }
-    
   }
 
-  public static class Package{
+  public static class Package {
     String id;
     String version;
     String location;
+
     public String getId() {
       return id;
     }
+
     public void setId(String id) {
       this.id = id;
     }
+
     public String getVersion() {
       return version;
     }
+
     public void setVersion(String version) {
       this.version = version;
     }
+
     public String getLocation() {
       return null;
     }
-    
   }
 }

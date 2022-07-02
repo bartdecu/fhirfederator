@@ -46,17 +46,15 @@ public class FederatorRestfulServer extends RestfulServer {
             configuration.getMembers().stream().map(x -> x.getUrl()).collect(Collectors.toList()),
             this.getFhirContext());
     ResourceRegistry rr = new ResourceRegistry(configuration.getResources().getDefault());
-    for (Entry<String, ResourceConfig> entry :
-        configuration.resources.other.entrySet()) {
-      
-        rr.putResourceConfig(entry.getKey(), entry.getValue());
-      
+    for (Entry<String, ResourceConfig> entry : configuration.resources.other.entrySet()) {
+
+      rr.putResourceConfig(entry.getKey(), entry.getValue());
     }
     SearchParam2FhirPathRegistry s2f = new SearchParam2FhirPathRegistry();
     List<SearchParameter> sps = new ArrayList<>();
     Setup setup = configuration.getSetup();
-    if (setup!=null){
-      for (Package package_: setup.getPackages()){
+    if (setup != null) {
+      for (Package package_ : setup.getPackages()) {
         sps.addAll(getSearchParametersFromNpmPackage(package_));
       }
     }
@@ -145,12 +143,13 @@ public class FederatorRestfulServer extends RestfulServer {
       HttpClientBuilder b = HttpClientBuilder.create();
       CloseableHttpClient client = b.build();
       HttpUriRequest req =
-          new HttpGet(Optional.<String>ofNullable(package_.getLocation()).orElse("https://packages2.fhir.org/packages")
-          + "/"
-          + Optional.<String>ofNullable(package_.getId()).orElse("hl7.fhir.r4.core")
-          + "/"
-          + Optional.<String>ofNullable(package_.getVersion()).orElse("4.0.1")
-          );
+          new HttpGet(
+              Optional.<String>ofNullable(package_.getLocation())
+                      .orElse("https://packages2.fhir.org/packages")
+                  + "/"
+                  + Optional.<String>ofNullable(package_.getId()).orElse("hl7.fhir.r4.core")
+                  + "/"
+                  + Optional.<String>ofNullable(package_.getVersion()).orElse("4.0.1"));
       response = client.execute(req);
       if (!(response.getStatusLine().getStatusCode() < 200)
           && !(response.getStatusLine().getStatusCode() > 299)) {
@@ -185,7 +184,7 @@ public class FederatorRestfulServer extends RestfulServer {
 
     return sps;
   }
-/*
+  /*
   private List<SearchParameter> getSearchParametersFromConfig(
       ResourceRegistry rr, ClientRegistry cr) {
     List<SearchParameter> params = new ArrayList<>();
