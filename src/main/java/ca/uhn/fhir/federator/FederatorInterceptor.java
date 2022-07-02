@@ -35,7 +35,7 @@ public class FederatorInterceptor {
       ourLog.info("This is a delete URL: {}", theRequestDetails.getCompleteUrl());
       return;
     }
-    //GET and POST types   
+    // GET and POST types
     if (theServletRequestDetails.getId() != null) {
       ourLog.info("This is a read URL: {}", theRequestDetails.getCompleteUrl());
       return;

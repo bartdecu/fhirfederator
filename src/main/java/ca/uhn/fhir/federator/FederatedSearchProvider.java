@@ -109,9 +109,9 @@ public class FederatedSearchProvider {
   }
 
   public IBundleProvider searchWithAstQueryAnalysis(String toParse) {
-    try{
-    toParse = URLDecoder.decode(toParse, "UTF-8");
-    } catch(IOException e){
+    try {
+      toParse = URLDecoder.decode(toParse, "UTF-8");
+    } catch (IOException e) {
       throw new RuntimeException(e);
     }
 

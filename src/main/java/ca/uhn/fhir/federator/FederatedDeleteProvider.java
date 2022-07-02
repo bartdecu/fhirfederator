@@ -29,15 +29,17 @@ public class FederatedDeleteProvider extends FederatedProvider {
    * @param cr
    */
   public FederatedDeleteProvider(
-      FhirContext ctx, ClientRegistry cr, ResourceRegistry rr, SearchParam2FhirPathRegistry s2f,
+      FhirContext ctx,
+      ClientRegistry cr,
+      ResourceRegistry rr,
+      SearchParam2FhirPathRegistry s2f,
       Class<? extends IBaseResource> br) {
     super(ctx, cr, rr, br);
     this.fsp = new FederatedSearchProvider(cr, rr, ctx, s2f);
   }
 
   @Delete
-  public MethodOutcome delete(@IdParam IdType theId,
-      @ConditionalUrlParam String theConditional) {
+  public MethodOutcome delete(@IdParam IdType theId, @ConditionalUrlParam String theConditional) {
 
     if (theId != null) {
 
@@ -48,45 +50,53 @@ public class FederatedDeleteProvider extends FederatedProvider {
             Msg.code(636) + "No memberserver available for the deletion of this resource");
       }
 
-      
-    IdType newId = new IdType(client.get().getServerBase(), theId.getResourceType(), theId.getId(), theId.getVersionIdPart());
+      IdType newId =
+          new IdType(
+              client.get().getServerBase(),
+              theId.getResourceType(),
+              theId.getId(),
+              theId.getVersionIdPart());
       return client.get().delete().resourceById(newId).execute();
     } else {
 
       IBundleProvider result = fsp.searchWithAstQueryAnalysis(theConditional);
 
-      
-      List<IIdType> updatableResources = result.getAllResources().stream().map(x -> x.getIdElement())
-          .filter(x -> getResourceType().getSimpleName().equals(x.getResourceType())).toList();
+      List<IIdType> updatableResources =
+          result.getAllResources().stream()
+              .map(x -> x.getIdElement())
+              .filter(x -> getResourceType().getSimpleName().equals(x.getResourceType()))
+              .toList();
 
-      List<MethodOutcome> retVal = updatableResources.stream().map(x -> {
-        String id = x.getIdPart();
-        String versionString = x.getVersionIdPart();
-        Optional<IGenericClient> client;
+      List<MethodOutcome> retVal =
+          updatableResources.stream()
+              .map(
+                  x -> {
+                    String id = x.getIdPart();
+                    String versionString = x.getVersionIdPart();
+                    Optional<IGenericClient> client;
 
-        if (x.hasBaseUrl()) {
-          client = Optional.ofNullable(getCtx().newRestfulGenericClient(x.getBaseUrl()));
-        } else {
-          client = getClient(Delete.class);
+                    if (x.hasBaseUrl()) {
+                      client =
+                          Optional.ofNullable(getCtx().newRestfulGenericClient(x.getBaseUrl()));
+                    } else {
+                      client = getClient(Delete.class);
+                    }
+                    if (!client.isPresent()) {
+                      throw new UnprocessableEntityException(
+                          Msg.code(636)
+                              + "No memberserver available for the update of this resource");
+                    }
 
-        }
-        if (!client.isPresent()) {
-          throw new UnprocessableEntityException(
-              Msg.code(636) + "No memberserver available for the update of this resource");
-        }
+                    IdType newId =
+                        new IdType(
+                            client.get().getServerBase(), x.getResourceType(), id, versionString);
 
-        IdType newId = new IdType(client.get().getServerBase(), x.getResourceType(), id, versionString);
-
-        return client.get().delete().resourceById(newId).execute();
-
-      }).collect(Collectors.toList());
+                    return client.get().delete().resourceById(newId).execute();
+                  })
+              .collect(Collectors.toList());
 
       // TODO: improve - add all deleted resources as headerValues?
       return retVal.get(0);
-
     }
-
   }
-
-  
 }

@@ -171,7 +171,7 @@ public class FederatorProperties {
     }
 
     public String getDelete() {
-        return delete;
+      return delete;
     }
   }
 

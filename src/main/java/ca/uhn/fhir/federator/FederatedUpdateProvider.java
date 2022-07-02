@@ -30,14 +30,18 @@ public class FederatedUpdateProvider extends FederatedProvider {
    * @param cr
    */
   public FederatedUpdateProvider(
-      FhirContext ctx, ClientRegistry cr, ResourceRegistry rr, SearchParam2FhirPathRegistry s2f,
+      FhirContext ctx,
+      ClientRegistry cr,
+      ResourceRegistry rr,
+      SearchParam2FhirPathRegistry s2f,
       Class<? extends IBaseResource> br) {
     super(ctx, cr, rr, br);
     this.fsp = new FederatedSearchProvider(cr, rr, ctx, s2f);
   }
 
   @Update
-  public MethodOutcome update(@ResourceParam IBaseResource resource,
+  public MethodOutcome update(
+      @ResourceParam IBaseResource resource,
       @IdParam IdType theId,
       @ConditionalUrlParam String theConditional) {
 
@@ -49,7 +53,12 @@ public class FederatedUpdateProvider extends FederatedProvider {
         throw new UnprocessableEntityException(
             Msg.code(636) + "No memberserver available for the update of this resource");
       }
-      IdType newId = new IdType(client.get().getServerBase(), theId.getResourceType(), theId.getId(), theId.getVersionIdPart());
+      IdType newId =
+          new IdType(
+              client.get().getServerBase(),
+              theId.getResourceType(),
+              theId.getId(),
+              theId.getVersionIdPart());
 
       return client.get().update().resource(resource).withId(newId).execute();
     } else {
@@ -57,34 +66,41 @@ public class FederatedUpdateProvider extends FederatedProvider {
       IBundleProvider result = fsp.searchWithAstQueryAnalysis(theConditional);
 
       String type = resource.getClass().getSimpleName();
-      List<IIdType> updatableResources = result.getAllResources().stream().map(x -> x.getIdElement())
-          .filter(x -> type.equals(x.getResourceType())).toList();
+      List<IIdType> updatableResources =
+          result.getAllResources().stream()
+              .map(x -> x.getIdElement())
+              .filter(x -> type.equals(x.getResourceType()))
+              .toList();
 
-      List<MethodOutcome> retVal = updatableResources.stream().map(x -> {
-        String id = x.getIdPart();
-        String versionString = x.getVersionIdPart();
+      List<MethodOutcome> retVal =
+          updatableResources.stream()
+              .map(
+                  x -> {
+                    String id = x.getIdPart();
+                    String versionString = x.getVersionIdPart();
 
-        Optional<IGenericClient> client;
+                    Optional<IGenericClient> client;
 
-        if (x.hasBaseUrl()) {
-          client = Optional.ofNullable(getCtx().newRestfulGenericClient(x.getBaseUrl()));
-        } else {
-          client = getClient(Update.class, resource);
-        }
-        if (!client.isPresent()) {
-          throw new UnprocessableEntityException(
-              Msg.code(636) + "No memberserver available for the update of this resource");
-        }
-        IdType newId = new IdType(client.get().getServerBase(), type, id, versionString);
+                    if (x.hasBaseUrl()) {
+                      client =
+                          Optional.ofNullable(getCtx().newRestfulGenericClient(x.getBaseUrl()));
+                    } else {
+                      client = getClient(Update.class, resource);
+                    }
+                    if (!client.isPresent()) {
+                      throw new UnprocessableEntityException(
+                          Msg.code(636)
+                              + "No memberserver available for the update of this resource");
+                    }
+                    IdType newId =
+                        new IdType(client.get().getServerBase(), type, id, versionString);
 
-        return client.get().update().resource(resource).withId(newId).execute();
-
-      }).collect(Collectors.toList());
+                    return client.get().update().resource(resource).withId(newId).execute();
+                  })
+              .collect(Collectors.toList());
 
       // TODO: improve - add all updated resources as headerValues?
       return retVal.get(0);
-
     }
-
   }
 }

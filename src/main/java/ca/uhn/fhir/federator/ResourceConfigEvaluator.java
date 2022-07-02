@@ -41,7 +41,7 @@ public class ResourceConfigEvaluator {
       toEval = config.getUpdate();
     } else if (Delete.class.equals(action)) {
       toEval = config.getDelete();
-    }  else {
+    } else {
       return (Boolean) null;
     }
 
@@ -49,9 +49,9 @@ public class ResourceConfigEvaluator {
       return true;
     } else if (Boolean.TRUE.toString().equals(toEval) || Boolean.FALSE.toString().equals(toEval)) {
       return Boolean.parseBoolean(toEval);
-    } else if(Delete.class.equals(action)) {
-      //we do not have a resource to evaluate
-      //so if there is something else than true/false, this is an error
+    } else if (Delete.class.equals(action)) {
+      // we do not have a resource to evaluate
+      // so if there is something else than true/false, this is an error
       ourLog.error("Unexpected content for delete property: {} {}", config.getServer(), toEval);
       return false;
     } else {
