@@ -87,6 +87,20 @@ public class FederatorRestfulServer extends RestfulServer {
                 cr,
                 rr,
                 (Class<? extends IBaseResource>) ((IBaseResource) object).getClass()));
+        registerProvider(
+            new FederatedUpdateProvider(
+                this.getFhirContext(),
+                cr,
+                rr,
+                s2f,
+                (Class<? extends IBaseResource>) ((IBaseResource) object).getClass()));
+        registerProvider(
+            new FederatedDeleteProvider(
+                this.getFhirContext(),
+                cr,
+                rr,
+                s2f,
+                (Class<? extends IBaseResource>) ((IBaseResource) object).getClass()));
 
       } catch (IllegalArgumentException | SecurityException e) {
         ourLog.info(e.getMessage());
@@ -185,31 +199,32 @@ public class FederatorRestfulServer extends RestfulServer {
     return sps;
   }
   /*
-  private List<SearchParameter> getSearchParametersFromConfig(
-      ResourceRegistry rr, ClientRegistry cr) {
-    List<SearchParameter> params = new ArrayList<>();
-    String url = configuration.getSetup().getUrl();
-    String dummy = rr.getServer4Resource("metadata").get(0).getServer();
-    do {
-      Bundle searchParameters =
-          cr.getClient(dummy)
-              .search()
-              .byUrl(url)
-              .accept(
-                  "application/json;q=1.0;application/fhir+xml;q=1.0, application/fhir+json;q=1.0,"
-                      + " application/xml+fhir;q=0.9, application/json+fhir;q=0.9")
-              .returnBundle(Bundle.class)
-              .execute();
-
-      searchParameters.getEntry().forEach(x -> params.add((SearchParameter) x.getResource()));
-
-      url =
-          searchParameters.getLink(IBaseBundle.LINK_NEXT) == null
-              ? null
-              : searchParameters.getLink(IBaseBundle.LINK_NEXT).getUrl();
-    } while (url != null);
-
-    return params;
-  }
-  */
+   * private List<SearchParameter> getSearchParametersFromConfig(
+   * ResourceRegistry rr, ClientRegistry cr) {
+   * List<SearchParameter> params = new ArrayList<>();
+   * String url = configuration.getSetup().getUrl();
+   * String dummy = rr.getServer4Resource("metadata").get(0).getServer();
+   * do {
+   * Bundle searchParameters =
+   * cr.getClient(dummy)
+   * .search()
+   * .byUrl(url)
+   * .accept(
+   * "application/json;q=1.0;application/fhir+xml;q=1.0, application/fhir+json;q=1.0,"
+   * + " application/xml+fhir;q=0.9, application/json+fhir;q=0.9")
+   * .returnBundle(Bundle.class)
+   * .execute();
+   *
+   * searchParameters.getEntry().forEach(x -> params.add((SearchParameter)
+   * x.getResource()));
+   *
+   * url =
+   * searchParameters.getLink(IBaseBundle.LINK_NEXT) == null
+   * ? null
+   * : searchParameters.getLink(IBaseBundle.LINK_NEXT).getUrl();
+   * } while (url != null);
+   *
+   * return params;
+   * }
+   */
 }

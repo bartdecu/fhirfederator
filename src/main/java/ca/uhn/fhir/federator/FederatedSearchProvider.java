@@ -96,13 +96,6 @@ public class FederatedSearchProvider {
     }
 
     ourLog.info("Received call with content type {} and {} bytes", contentType, bytes.length);
-    IBundleProvider result = doWithASTQueryAnalysis(theServletRequest, tenantAndResource);
-
-    return result;
-  }
-
-  private IBundleProvider doWithASTQueryAnalysis(
-      HttpServletRequest theServletRequest, String tenantAndResource) throws IOException {
     // TODO split tenant and resource
     String toParse;
     if (StringUtils.isNotBlank(theServletRequest.getQueryString())) {
@@ -110,10 +103,19 @@ public class FederatedSearchProvider {
     } else {
       toParse = tenantAndResource;
     }
+    IBundleProvider result = searchWithAstQueryAnalysis(toParse.substring(1));
 
-    toParse = URLDecoder.decode(toParse, "UTF-8");
+    return result;
+  }
 
-    CharStream inputCharStream = CharStreams.fromString(toParse.substring(1));
+  public IBundleProvider searchWithAstQueryAnalysis(String toParse) {
+    try {
+      toParse = URLDecoder.decode(toParse, "UTF-8");
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+
+    CharStream inputCharStream = CharStreams.fromString(toParse);
     TokenSource tokenSource = new FhirUrlLexer(inputCharStream);
     TokenStream inputTokenStream = new CommonTokenStream(tokenSource);
     FhirUrlParser parser = new FhirUrlParser(inputTokenStream);

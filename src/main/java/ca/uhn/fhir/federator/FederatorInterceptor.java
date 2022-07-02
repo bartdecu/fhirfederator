@@ -27,6 +27,15 @@ public class FederatorInterceptor {
       RequestDetails theRequestDetails,
       ServletRequestDetails theServletRequestDetails)
       throws ServletException {
+    if (theRequestDetails.getRequestType().name().equalsIgnoreCase("PUT")) {
+      ourLog.info("This is an update URL: {}", theRequestDetails.getCompleteUrl());
+      return;
+    }
+    if (theRequestDetails.getRequestType().name().equalsIgnoreCase("DELETE")) {
+      ourLog.info("This is a delete URL: {}", theRequestDetails.getCompleteUrl());
+      return;
+    }
+    // GET and POST types
     if (theServletRequestDetails.getId() != null) {
       ourLog.info("This is a read URL: {}", theRequestDetails.getCompleteUrl());
       return;
