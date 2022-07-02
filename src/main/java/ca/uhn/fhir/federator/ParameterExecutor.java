@@ -20,7 +20,7 @@ import org.hl7.fhir.r4.model.Identifier;
 import org.hl7.fhir.r4.model.Reference;
 
 import ca.uhn.fhir.context.FhirContext;
-import ca.uhn.fhir.federator.FederatorProperties.ResourceConfig;
+import ca.uhn.fhir.federator.FederatorProperties.ServerResourceConfig;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 
 public class ParameterExecutor {
@@ -55,8 +55,8 @@ public class ParameterExecutor {
       resourceCachePerParameter.put(resource, new ArrayList<>());
       List<ParsedUrl> executableUrls = createExecutableUrl(url);
       for (ParsedUrl executableUrl : executableUrls) {
-        List<ResourceConfig> servers = rr.getServer4Resource(resource);
-        Stream<ResourceConfig> stream = servers.parallelStream();
+        List<ServerResourceConfig> servers = rr.getServer4Resource(resource).getLocations();
+        Stream<ServerResourceConfig> stream = servers.parallelStream();
         List<IBaseResource> result =
             stream
                 .flatMap(resourceConfig -> executeUrl(executableUrl, resourceConfig))
@@ -76,7 +76,7 @@ public class ParameterExecutor {
   }
 
   private Stream<? extends IBaseResource> executeUrl(
-      ParsedUrl executableUrl, ResourceConfig resourceConfig) {
+      ParsedUrl executableUrl, ServerResourceConfig resourceConfig) {
     if (!executableUrl.isExecutable()) {
       return Stream.empty();
     } else {
@@ -114,11 +114,24 @@ public class ParameterExecutor {
           List<IBaseResource> list =
               resourceCachePerParameter.getOrDefault(
                   url.getPlaceholder().getKey(), Collections.emptyList());
-          List<String> identifiers = getIdentifiersFromResources(list, url.getPlaceholder());
+          List<Identifier> identifiers = getIdentifiersFromResources(list, url.getPlaceholder());
+          if (rr.getServer4Resource(url.getPlaceholder().getKey()).getIdentifiers() != null
+              && !rr.getServer4Resource(url.getPlaceholder().getKey()).getIdentifiers().isEmpty()) {
+            // filter identifiers to those we are really interested in
+            List<String> importantIdentifiers =
+                rr.getServer4Resource(url.getPlaceholder().getKey()).getIdentifiers().stream()
+                    .flatMap(x -> x.stream())
+                    .collect(Collectors.toList());
+            identifiers =
+                identifiers.stream()
+                    .filter(x -> importantIdentifiers.contains(x.getSystem()))
+                    .toList();
+          }
+          List<String> sanitizedIdentifiers = sanitizeIdentifiers(identifiers);
           int batch = rr.getMaxOr4Resource(resource);
           int counter = 0;
           List<String> idBatch = new ArrayList<>();
-          for (String identifier : identifiers) {
+          for (String identifier : sanitizedIdentifiers) {
             if (counter < batch) {
               idBatch.add(identifier);
             } else {
@@ -161,7 +174,7 @@ public class ParameterExecutor {
     return chainedSearchParams;
   }
 
-  private List<String> getIdentifiersFromResources(
+  private List<Identifier> getIdentifiersFromResources(
       List<IBaseResource> list, DefaultMapEntry<String, List<String>> placeholder) {
     List<String> chainedSearchParams = placeholder.getValue();
     chainedSearchParams = trimIdentifierFromChainedSearchParameters(chainedSearchParams);
@@ -174,11 +187,13 @@ public class ParameterExecutor {
                 list.stream().map(x -> (IBase) x).collect(Collectors.toList()),
                 chainedSearchParams)
             .execute();
-    toProcess =
-        toProcess.stream()
-            .flatMap(resource -> handleReferenceResource(resource))
-            .collect(Collectors.toList());
+    return toProcess.stream()
+        .flatMap(resource -> handleReferenceResource(resource))
+        .map(iBase -> (Identifier) iBase)
+        .collect(Collectors.toList());
+  }
 
+  private List<String> sanitizeIdentifiers(List<Identifier> toProcess) {
     List<String> identifiers =
         toProcess.stream()
             .flatMap(

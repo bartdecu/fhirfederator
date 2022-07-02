@@ -6,7 +6,7 @@ import java.util.Optional;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 
 import ca.uhn.fhir.context.FhirContext;
-import ca.uhn.fhir.federator.FederatorProperties.ResourceConfig;
+import ca.uhn.fhir.federator.FederatorProperties.ServerResourceConfig;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.server.IResourceProvider;
 
@@ -38,9 +38,9 @@ public abstract class FederatedProvider implements IResourceProvider {
   }
 
   protected Optional<IGenericClient> getClient(Class<?> action, IBaseResource resource) {
-    List<ResourceConfig> servers = rr.getServer4Resource(br.getSimpleName());
+    List<ServerResourceConfig> servers = rr.getServer4Resource(br.getSimpleName()).getLocations();
 
-    Optional<ResourceConfig> preferred =
+    Optional<ServerResourceConfig> preferred =
         servers.stream().filter(x -> evaluate(action, resource, x)).findFirst();
     if (!preferred.isPresent()) {
       return Optional.empty();
@@ -48,7 +48,7 @@ public abstract class FederatedProvider implements IResourceProvider {
     return Optional.ofNullable(cr.getClient(preferred.get().getServer()));
   }
 
-  private Boolean evaluate(Class<?> action, IBaseResource resource, ResourceConfig config) {
+  private Boolean evaluate(Class<?> action, IBaseResource resource, ServerResourceConfig config) {
 
     return new ResourceConfigEvaluator(ctx, action, resource, config).execute();
   }

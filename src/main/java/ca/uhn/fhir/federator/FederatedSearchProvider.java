@@ -1,5 +1,7 @@
 package ca.uhn.fhir.federator;
 
+import static ca.uhn.fhir.federator.TreeUtils.toPrettyTree;
+
 import java.io.IOException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
@@ -120,7 +122,7 @@ public class FederatedSearchProvider {
 
     SContext context = parser.s();
 
-    ourLog.info(TreeUtils.toPrettyTree(context, Arrays.asList(parser.getRuleNames())));
+    ourLog.info(toPrettyTree(context, Arrays.asList(parser.getRuleNames())));
 
     ourLog.info(context.getText());
 
@@ -141,7 +143,7 @@ public class FederatedSearchProvider {
             .map(partialUrls -> new ParameterNode(partialUrls, rr, cr, ctx, s2f))
             .collect(Collectors.toList());
 
-    AndNode and = new AndNode(perParameter);
+    AndNode and = new AndNode(rr, perParameter);
 
     List<ParameterNode> perIncludeParameter =
         visitor.getIncludeParameters().stream()
@@ -189,8 +191,7 @@ public class FederatedSearchProvider {
               "SearchParam {} does not exist for resource {}",
               parsedUrl.getKey().get(0),
               parsedUrl.getResource()));
-    }
-    if (!ok && !handlingStrict) {
+    } else if (!ok) {
       return new ParsedUrl(parsedUrl.getResource());
     } else {
       return parsedUrl;

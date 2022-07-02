@@ -7,7 +7,7 @@ import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.BooleanType;
 
 import ca.uhn.fhir.context.FhirContext;
-import ca.uhn.fhir.federator.FederatorProperties.ResourceConfig;
+import ca.uhn.fhir.federator.FederatorProperties.ServerResourceConfig;
 import ca.uhn.fhir.fhirpath.IFhirPath;
 import ca.uhn.fhir.rest.annotation.Create;
 import ca.uhn.fhir.rest.annotation.Read;
@@ -18,12 +18,12 @@ public class ResourceConfigEvaluator {
       org.slf4j.LoggerFactory.getLogger(ResourceConfigEvaluator.class);
 
   private Class<?> action;
-  private ResourceConfig config;
+  private ServerResourceConfig config;
   private FhirContext ctx;
   private IBase resource;
 
   public ResourceConfigEvaluator(
-      FhirContext ctx, Class<?> action, IBaseResource resource, ResourceConfig config) {
+      FhirContext ctx, Class<?> action, IBaseResource resource, ServerResourceConfig config) {
     this.action = action;
     this.resource = resource;
     this.config = config;
