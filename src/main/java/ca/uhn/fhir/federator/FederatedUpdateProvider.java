@@ -70,7 +70,7 @@ public class FederatedUpdateProvider extends FederatedProvider {
           result.getAllResources().stream()
               .map(x -> x.getIdElement())
               .filter(x -> type.equals(x.getResourceType()))
-              .toList();
+              .collect(Collectors.toList());
 
       List<MethodOutcome> retVal =
           updatableResources.stream()
