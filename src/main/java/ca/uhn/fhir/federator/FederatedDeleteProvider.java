@@ -65,7 +65,7 @@ public class FederatedDeleteProvider extends FederatedProvider {
           result.getAllResources().stream()
               .map(x -> x.getIdElement())
               .filter(x -> getResourceType().getSimpleName().equals(x.getResourceType()))
-              .toList();
+              .collect(Collectors.toList());
 
       List<MethodOutcome> retVal =
           updatableResources.stream()
