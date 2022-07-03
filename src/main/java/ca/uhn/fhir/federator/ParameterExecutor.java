@@ -125,7 +125,7 @@ public class ParameterExecutor {
             identifiers =
                 identifiers.stream()
                     .filter(x -> importantIdentifiers.contains(x.getSystem()))
-                    .toList();
+                    .collect(Collectors.toList());
           }
           List<String> sanitizedIdentifiers = sanitizeIdentifiers(identifiers);
           int batch = rr.getMaxOr4Resource(resource);
