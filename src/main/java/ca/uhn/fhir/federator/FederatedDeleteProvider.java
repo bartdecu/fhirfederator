@@ -29,7 +29,6 @@ public class FederatedDeleteProvider extends FederatedProvider {
       SearchParam2FhirPathRegistry s2f,
       Class<? extends IBaseResource> br) {
     super(ctx, cr, rr, br, s2f);
-
   }
 
   @Delete
@@ -54,13 +53,11 @@ public class FederatedDeleteProvider extends FederatedProvider {
     } else {
 
       return doConditionalAction(Delete.class, null, theConditional);
-
-      
     }
   }
 
   @Override
   protected MethodOutcome action(IBaseResource resource, IGenericClient client, IdType newId) {
-    return  client.delete().resourceById(newId).execute();
+    return client.delete().resourceById(newId).execute();
   }
 }

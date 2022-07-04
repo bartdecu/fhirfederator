@@ -36,12 +36,12 @@ public class FederatedCreateProvider extends FederatedProvider {
           Msg.code(636) + "No memberserver available for the creation of this resource");
     }
 
-    return  action(resource, client.get(), null);
+    return action(resource, client.get(), null);
   }
 
   @Override
   protected MethodOutcome action(IBaseResource resource, IGenericClient client, IdType newId) {
-    
+
     return client.create().resource(resource).execute();
   }
 }

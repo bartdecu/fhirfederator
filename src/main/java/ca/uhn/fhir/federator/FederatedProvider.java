@@ -46,14 +46,18 @@ public abstract class FederatedProvider implements IResourceProvider {
    * @param cr
    */
   protected FederatedProvider(
-      FhirContext ctx, ClientRegistry cr, ResourceRegistry rr, Class<? extends IBaseResource> br, SearchParam2FhirPathRegistry s2f) {
+      FhirContext ctx,
+      ClientRegistry cr,
+      ResourceRegistry rr,
+      Class<? extends IBaseResource> br,
+      SearchParam2FhirPathRegistry s2f) {
     this.ctx = ctx;
     this.br = br;
     this.cr = cr;
     this.rr = rr;
     this.s2f = s2f;
 
-    this.fsp = s2f==null?null: new FederatedSearchProvider(cr, rr, ctx, s2f);
+    this.fsp = s2f == null ? null : new FederatedSearchProvider(cr, rr, ctx, s2f);
   }
 
   public FhirContext getCtx() {
@@ -85,42 +89,45 @@ public abstract class FederatedProvider implements IResourceProvider {
     return getClient(delete, null);
   }
 
-  protected abstract MethodOutcome action(IBaseResource resource, IGenericClient client, IdType newId); 
+  protected abstract MethodOutcome action(
+      IBaseResource resource, IGenericClient client, IdType newId);
 
-  private Stream<? extends MethodOutcome> performAction(Class<?> action, IBaseResource resource, String type, IIdType x) {
+  private Stream<? extends MethodOutcome> performAction(
+      Class<?> action, IBaseResource resource, String type, IIdType x) {
     String id = x.getIdPart();
     String versionString = x.getVersionIdPart();
     Optional<IGenericClient> client;
     Stream<MethodOutcome> outcomeStream = null;
     if (x.hasBaseUrl()) {
-      client =
-          Optional.ofNullable(getCtx().newRestfulGenericClient(x.getBaseUrl()));
+      client = Optional.ofNullable(getCtx().newRestfulGenericClient(x.getBaseUrl()));
     } else {
       client = getClient(action, resource);
     }
     if (!client.isPresent()) {
       throw new UnprocessableEntityException(
-          Msg.code(636)
-              + "No memberserver available for the update of this resource");
+          Msg.code(636) + "No memberserver available for the update of this resource");
     }
-    IdType newId =
-        new IdType(client.get().getServerBase(), type, id, versionString);
-    try{
+    IdType newId = new IdType(client.get().getServerBase(), type, id, versionString);
+    try {
       MethodOutcome outcome = action(resource, client.get(), newId);
-      outcomeStream =  Arrays.<MethodOutcome>asList(outcome).stream();
+      outcomeStream = Arrays.<MethodOutcome>asList(outcome).stream();
 
-    } catch (BaseServerResponseException e){
-      ourLog.error("{}",e.getMessage());
+    } catch (BaseServerResponseException e) {
+      ourLog.error("{}", e.getMessage());
       int status = e.getStatusCode();
-      MethodOutcome outcome = new MethodOutcome().setId(new IdType(RFC2616,RFC_HTTP_ERROR_CODE,Integer.toString(status),null));
-      outcome.setResponseHeaders(new SingletonMap<String,List<String>>("Id", Arrays.asList(newId.getValue())));
+      MethodOutcome outcome =
+          new MethodOutcome()
+              .setId(new IdType(RFC2616, RFC_HTTP_ERROR_CODE, Integer.toString(status), null));
+      outcome.setResponseHeaders(
+          new SingletonMap<String, List<String>>("Id", Arrays.asList(newId.getValue())));
       outcomeStream = Arrays.<MethodOutcome>asList(outcome).stream();
     }
     return outcomeStream;
   }
 
-  protected MethodOutcome doConditionalAction(Class<?> action, IBaseResource resource, String theConditional) {
-    if (fsp == null){
+  protected MethodOutcome doConditionalAction(
+      Class<?> action, IBaseResource resource, String theConditional) {
+    if (fsp == null) {
       throw new NotImplementedException();
     }
 
@@ -135,22 +142,29 @@ public abstract class FederatedProvider implements IResourceProvider {
 
     List<MethodOutcome> retVal =
         updatableResources.stream()
-            .flatMap(
-                x -> performAction(action, resource, type, x))
+            .flatMap(x -> performAction(action, resource, type, x))
             .collect(Collectors.toList());
 
-     Optional<MethodOutcome> rv = retVal.stream().filter(x -> !RFC_HTTP_ERROR_CODE.equals(x.getId().getResourceType()) ).findFirst();
-     
-     if (rv.isPresent()){
+    Optional<MethodOutcome> rv =
+        retVal.stream()
+            .filter(x -> !RFC_HTTP_ERROR_CODE.equals(x.getId().getResourceType()))
+            .findFirst();
+
+    if (rv.isPresent()) {
       return rv.get();
-     }
+    }
 
-     rv = retVal.stream().filter(x -> RFC_HTTP_ERROR_CODE.equals(x.getId().getResourceType()) ).findFirst();
+    rv =
+        retVal.stream()
+            .filter(x -> RFC_HTTP_ERROR_CODE.equals(x.getId().getResourceType()))
+            .findFirst();
 
-     if (rv.isPresent()){
-      throw BaseServerResponseException.newInstance(rv.get().getId().getIdPartAsLong().intValue(), StringUtils.join(rv.get().getResponseHeaders().get("Id"),";") );
-     } else {
+    if (rv.isPresent()) {
+      throw BaseServerResponseException.newInstance(
+          rv.get().getId().getIdPartAsLong().intValue(),
+          StringUtils.join(rv.get().getResponseHeaders().get("Id"), ";"));
+    } else {
       throw new ResourceNotFoundException(theConditional);
-     }
+    }
   }
 }

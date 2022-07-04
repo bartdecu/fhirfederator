@@ -17,7 +17,7 @@ public class FederatedReadProvider extends FederatedProvider {
 
   public FederatedReadProvider(
       FhirContext ctx, ClientRegistry cr, ResourceRegistry rr, Class<? extends IBaseResource> br) {
-    super(ctx, cr, rr, br,null);
+    super(ctx, cr, rr, br, null);
   }
 
   /** Simple implementation of the "read" method */

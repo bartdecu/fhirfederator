@@ -15,11 +15,10 @@ import ca.uhn.fhir.rest.api.MethodOutcome;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.server.exceptions.UnprocessableEntityException;
 
-public class FederatedUpdateProvider extends FederatedProvider {  
+public class FederatedUpdateProvider extends FederatedProvider {
 
   private static final org.slf4j.Logger ourLog =
       org.slf4j.LoggerFactory.getLogger(FederatedUpdateProvider.class);
-
 
   /**
    * Constructor
@@ -34,7 +33,6 @@ public class FederatedUpdateProvider extends FederatedProvider {
       SearchParam2FhirPathRegistry s2f,
       Class<? extends IBaseResource> br) {
     super(ctx, cr, rr, br, s2f);
-    
   }
 
   @Update
@@ -65,17 +63,8 @@ public class FederatedUpdateProvider extends FederatedProvider {
     }
   }
 
-  
-
-  
-
-
-
-@Override
+  @Override
   protected MethodOutcome action(IBaseResource resource, IGenericClient client, IdType newId) {
     return client.update().resource(resource).withId(newId).execute();
   }
-
-  
-  
 }
