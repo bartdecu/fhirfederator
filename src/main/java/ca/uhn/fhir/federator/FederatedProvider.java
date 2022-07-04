@@ -133,7 +133,7 @@ public abstract class FederatedProvider implements IResourceProvider {
 
     IBundleProvider result = fsp.searchWithAstQueryAnalysis(theConditional);
 
-    String type = resource.getClass().getSimpleName();
+    String type = getResourceType().getSimpleName();
     List<IIdType> updatableResources =
         result.getAllResources().stream()
             .map(x -> x.getIdElement())
