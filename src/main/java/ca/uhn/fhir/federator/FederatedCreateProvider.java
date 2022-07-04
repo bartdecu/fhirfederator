@@ -3,6 +3,7 @@ package ca.uhn.fhir.federator;
 import java.util.Optional;
 
 import org.hl7.fhir.instance.model.api.IBaseResource;
+import org.hl7.fhir.r4.model.IdType;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.i18n.Msg;
@@ -22,7 +23,7 @@ public class FederatedCreateProvider extends FederatedProvider {
    */
   public FederatedCreateProvider(
       FhirContext ctx, ClientRegistry cr, ResourceRegistry rr, Class<? extends IBaseResource> br) {
-    super(ctx, cr, rr, br);
+    super(ctx, cr, rr, br, null);
   }
 
   @Create
@@ -35,6 +36,12 @@ public class FederatedCreateProvider extends FederatedProvider {
           Msg.code(636) + "No memberserver available for the creation of this resource");
     }
 
-    return client.get().create().resource(resource).execute();
+    return action(resource, client.get(), null);
+  }
+
+  @Override
+  protected MethodOutcome action(IBaseResource resource, IGenericClient client, IdType newId) {
+
+    return client.create().resource(resource).execute();
   }
 }
