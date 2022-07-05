@@ -82,7 +82,7 @@ public abstract class FederatedProvider implements IResourceProvider {
 
   private Boolean evaluate(Class<?> action, IBaseResource resource, ServerResourceConfig config) {
 
-    return new ResourceConfigEvaluator(ctx, action, resource, config).execute();
+    return new ResourceConfigEvaluator(ctx, action, resource, config, cr, rr).execute();
   }
 
   protected Optional<IGenericClient> getClient(Class<Delete> delete) {
