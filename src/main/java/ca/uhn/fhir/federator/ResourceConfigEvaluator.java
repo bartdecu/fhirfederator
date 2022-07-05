@@ -23,12 +23,23 @@ public class ResourceConfigEvaluator {
   private FhirContext ctx;
   private IBase resource;
 
+  private ClientRegistry cr;
+  private ResourceRegistry rr;
+
   public ResourceConfigEvaluator(
-      FhirContext ctx, Class<?> action, IBaseResource resource, ServerResourceConfig config) {
+      FhirContext ctx,
+      Class<?> action,
+      IBaseResource resource,
+      ServerResourceConfig config,
+      ClientRegistry cr,
+      ResourceRegistry rr) {
+
     this.action = action;
     this.resource = resource;
     this.config = config;
     this.ctx = ctx;
+    this.cr = cr;
+    this.rr = rr;
   }
 
   public Boolean execute() {
@@ -56,7 +67,7 @@ public class ResourceConfigEvaluator {
       return false;
     } else {
       try {
-        IFhirPath fp = ctx.newFhirPath();
+        IFhirPath fp = new FhirPathR4WithResolver(ctx, cr, rr);
         Optional<BooleanType> ev = fp.evaluateFirst(resource, toEval, BooleanType.class);
         if (ev.isPresent() && ev.get().isBooleanPrimitive()) {
           BooleanType t = ev.get();
