@@ -26,9 +26,13 @@ public class ResourceConfigEvaluator {
   private ClientRegistry cr;
   private ResourceRegistry rr;
 
-
   public ResourceConfigEvaluator(
-      FhirContext ctx, Class<?> action, IBaseResource resource, ServerResourceConfig config, ClientRegistry cr, ResourceRegistry rr) {
+      FhirContext ctx,
+      Class<?> action,
+      IBaseResource resource,
+      ServerResourceConfig config,
+      ClientRegistry cr,
+      ResourceRegistry rr) {
 
     this.action = action;
     this.resource = resource;
@@ -36,7 +40,6 @@ public class ResourceConfigEvaluator {
     this.ctx = ctx;
     this.cr = cr;
     this.rr = rr;
-
   }
 
   public Boolean execute() {
