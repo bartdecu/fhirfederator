@@ -21,7 +21,8 @@ public class TestResourceConfigEvaluator {
     config.setServer("http://test/fhir");
 
     Boolean actual =
-        new ResourceConfigEvaluator(FhirContext.forR4Cached(), Read.class, null, config, null, null).execute();
+        new ResourceConfigEvaluator(FhirContext.forR4Cached(), Read.class, null, config, null, null)
+            .execute();
 
     assertEquals(true, actual);
   }
@@ -34,7 +35,8 @@ public class TestResourceConfigEvaluator {
     config.setServer("http://test/fhir");
 
     Boolean actual =
-        new ResourceConfigEvaluator(FhirContext.forR4Cached(), Read.class, null, config, null, null).execute();
+        new ResourceConfigEvaluator(FhirContext.forR4Cached(), Read.class, null, config, null, null)
+            .execute();
 
     assertEquals(false, actual);
   }
@@ -47,7 +49,8 @@ public class TestResourceConfigEvaluator {
     config.setServer("http://test/fhir");
 
     Boolean actual =
-        new ResourceConfigEvaluator(FhirContext.forR4Cached(), Read.class, null, config, null, null).execute();
+        new ResourceConfigEvaluator(FhirContext.forR4Cached(), Read.class, null, config, null, null)
+            .execute();
 
     assertEquals(true, actual);
   }
@@ -63,7 +66,8 @@ public class TestResourceConfigEvaluator {
     patient.setName(Arrays.asList(new HumanName().setFamily("Decuypere")));
 
     Boolean actual =
-        new ResourceConfigEvaluator(FhirContext.forR4Cached(), Read.class, patient, config, null, null)
+        new ResourceConfigEvaluator(
+                FhirContext.forR4Cached(), Read.class, patient, config, null, null)
             .execute();
 
     assertEquals(false, actual);
@@ -80,7 +84,8 @@ public class TestResourceConfigEvaluator {
     patient.setName(Arrays.asList(new HumanName().setFamily("Decuypere")));
 
     Boolean actual =
-        new ResourceConfigEvaluator(FhirContext.forR4Cached(), Read.class, patient, config, null, null)
+        new ResourceConfigEvaluator(
+                FhirContext.forR4Cached(), Read.class, patient, config, null, null)
             .execute();
 
     assertEquals(true, actual);
@@ -97,7 +102,8 @@ public class TestResourceConfigEvaluator {
     patient.setName(Arrays.asList(new HumanName().setFamily("Decuypere")));
 
     Boolean actual =
-        new ResourceConfigEvaluator(FhirContext.forR4Cached(), Read.class, patient, config, null, null)
+        new ResourceConfigEvaluator(
+                FhirContext.forR4Cached(), Read.class, patient, config, null, null)
             .execute();
 
     assertEquals(false, actual);
@@ -114,7 +120,8 @@ public class TestResourceConfigEvaluator {
     patient.setName(Arrays.asList(new HumanName().setFamily("Decuypere")));
 
     Boolean actual =
-        new ResourceConfigEvaluator(FhirContext.forR4Cached(), Read.class, patient, config, null, null)
+        new ResourceConfigEvaluator(
+                FhirContext.forR4Cached(), Read.class, patient, config, null, null)
             .execute();
 
     assertEquals(false, actual);

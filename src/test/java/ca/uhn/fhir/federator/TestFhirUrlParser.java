@@ -528,24 +528,25 @@ public class TestFhirUrlParser {
   @Test
   public void testSearchPage8() throws IOException {
 
-    String simplestProgram = "Patient?identifier:otype=http://terminology.hl7.org/CodeSystem/v2-0203|MR|446053";
+    String simplestProgram =
+        "Patient?identifier:otype=http://terminology.hl7.org/CodeSystem/v2-0203|MR|446053";
 
     List<List<String>> actual = toUrls(simplestProgram);
     System.out.println(actual);
 
     List<List<String>> expected =
         Arrays.asList(
-            Arrays.asList("Patient?identifier:otype=http://terminology.hl7.org/CodeSystem/v2-0203|MR|446053"));
+            Arrays.asList(
+                "Patient?identifier:otype=http://terminology.hl7.org/CodeSystem/v2-0203|MR|446053"));
 
     assertEquals(expected, actual);
   }
 
-  
-
   @Test
   public void testSearchPage9() throws IOException {
 
-    String simplestProgram = "Condition?code:in=http%3A%2F%2Fsnomed.info%2Fsct%3Ffhir_vs%3Disa%2F126851005";
+    String simplestProgram =
+        "Condition?code:in=http%3A%2F%2Fsnomed.info%2Fsct%3Ffhir_vs%3Disa%2F126851005";
 
     List<List<String>> actual = toUrls(simplestProgram);
     System.out.println(actual);
@@ -556,7 +557,6 @@ public class TestFhirUrlParser {
 
     assertEquals(expected, actual);
   }
-
 
   @Test
   public void testSearchPage10() throws IOException {
@@ -582,14 +582,10 @@ public class TestFhirUrlParser {
     System.out.println(actual);
 
     List<List<String>> expected =
-        Arrays.asList(
-            Arrays.asList("Observation?value-quantity=5.4||mg"));
+        Arrays.asList(Arrays.asList("Observation?value-quantity=5.4||mg"));
 
     assertEquals(expected, actual);
   }
-
-  
-  
 
   private List<List<String>> toUrls(String simplestProgram) throws IOException {
     FhirUrlAnalyser visitor = toVisitor(simplestProgram);
