@@ -413,14 +413,16 @@ public class TestFhirUrlParser {
   @Test
   public void testSearchPage0() throws IOException {
 
-    String simplestProgram = "Observation?patient.identifier=http://example.com/fhir/identifier/mrn|123456";
+    String simplestProgram =
+        "Observation?patient.identifier=http://example.com/fhir/identifier/mrn|123456";
 
     List<List<String>> actual = toUrls(simplestProgram);
     System.out.println(actual);
 
     List<List<String>> expected =
         Arrays.asList(
-            Arrays.asList("Observation?patient.identifier=http://example.com/fhir/identifier/mrn|123456"));
+            Arrays.asList(
+                "Observation?patient.identifier=http://example.com/fhir/identifier/mrn|123456"));
 
     assertEquals(expected, actual);
   }
@@ -433,9 +435,7 @@ public class TestFhirUrlParser {
     List<List<String>> actual = toUrls(simplestProgram);
     System.out.println(actual);
 
-    List<List<String>> expected =
-        Arrays.asList(
-            Arrays.asList("Patient?_id=23"));
+    List<List<String>> expected = Arrays.asList(Arrays.asList("Patient?_id=23"));
 
     assertEquals(expected, actual);
   }
@@ -448,9 +448,7 @@ public class TestFhirUrlParser {
     List<List<String>> actual = toUrls(simplestProgram);
     System.out.println(actual);
 
-    List<List<String>> expected =
-        Arrays.asList(
-            Arrays.asList("Patient/23"));
+    List<List<String>> expected = Arrays.asList(Arrays.asList("Patient/23"));
 
     assertEquals(expected, actual);
   }
@@ -464,8 +462,7 @@ public class TestFhirUrlParser {
     System.out.println(actual);
 
     List<List<String>> expected =
-        Arrays.asList(
-            Arrays.asList("Observation?_lastUpdated=gt2010-10-01"));
+        Arrays.asList(Arrays.asList("Observation?_lastUpdated=gt2010-10-01"));
 
     assertEquals(expected, actual);
   }
@@ -479,8 +476,7 @@ public class TestFhirUrlParser {
     System.out.println(actual);
 
     List<List<String>> expected =
-        Arrays.asList(
-            Arrays.asList("Condition?_tag=http://acme.org/codes|needs-review"));
+        Arrays.asList(Arrays.asList("Condition?_tag=http://acme.org/codes|needs-review"));
 
     assertEquals(expected, actual);
   }
@@ -488,18 +484,19 @@ public class TestFhirUrlParser {
   @Test
   public void testSearchPage5() throws IOException {
 
-    String simplestProgram = "DiagnosticReport?_profile=http://hl7.org/fhir/StructureDefinition/lipid";
+    String simplestProgram =
+        "DiagnosticReport?_profile=http://hl7.org/fhir/StructureDefinition/lipid";
 
     List<List<String>> actual = toUrls(simplestProgram);
     System.out.println(actual);
 
     List<List<String>> expected =
         Arrays.asList(
-            Arrays.asList("DiagnosticReport?_profile=http://hl7.org/fhir/StructureDefinition/lipid"));
+            Arrays.asList(
+                "DiagnosticReport?_profile=http://hl7.org/fhir/StructureDefinition/lipid"));
 
     assertEquals(expected, actual);
   }
-
 
   @Test
   public void testSearchPage6() throws IOException {
@@ -510,8 +507,7 @@ public class TestFhirUrlParser {
     System.out.println(actual);
 
     List<List<String>> expected =
-        Arrays.asList(
-            Arrays.asList("DiagnosticReport?_profile=Profile/lipid"));
+        Arrays.asList(Arrays.asList("DiagnosticReport?_profile=Profile/lipid"));
 
     assertEquals(expected, actual);
   }
@@ -524,9 +520,7 @@ public class TestFhirUrlParser {
     List<List<String>> actual = toUrls(simplestProgram);
     System.out.println(actual);
 
-    List<List<String>> expected =
-        Arrays.asList(
-            Arrays.asList("RiskAssessment?probability=gt0.8"));
+    List<List<String>> expected = Arrays.asList(Arrays.asList("RiskAssessment?probability=gt0.8"));
 
     assertEquals(expected, actual);
   }

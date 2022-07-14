@@ -45,8 +45,7 @@ public class ParsedUrlCreator {
           List<String> key = Arrays.asList("identifier");
           String source = resource;
           boolean iterate = false;
-          if (httpParam.k().u() != null
-              && "iterate".equals(httpParam.k().u().TOKEN().getText())) {
+          if (httpParam.k().u() != null && "iterate".equals(httpParam.k().u().TOKEN().getText())) {
             iterate = true;
           }
 
@@ -84,8 +83,7 @@ public class ParsedUrlCreator {
           }
           List<String> source = null;
           if (((JContext) parent).m().e() != null) {
-            source =
-                Arrays.asList(((JContext) parent).m().e().x().TOKEN().getText(), "identifier");
+            source = Arrays.asList(((JContext) parent).m().e().x().TOKEN().getText(), "identifier");
           } else {
             source = Arrays.asList("identifier");
           }
@@ -169,8 +167,7 @@ public class ParsedUrlCreator {
 
                 break;
               case "JContext":
-                target =
-                    Arrays.asList(((JContext) parent2).l().TOKEN().getText(), "identifier");
+                target = Arrays.asList(((JContext) parent2).l().TOKEN().getText(), "identifier");
                 source = Arrays.asList("identifier");
                 break;
               case "EContext":
@@ -179,20 +176,12 @@ public class ParsedUrlCreator {
                 if (((EContext) parent2).getParent() instanceof KContext) {
                   source =
                       Arrays.asList(
-                          ((KContext) ((EContext) parent2).getParent())
-                              .e()
-                              .x()
-                              .TOKEN()
-                              .getText(),
+                          ((KContext) ((EContext) parent2).getParent()).e().x().TOKEN().getText(),
                           "identifier");
                 } else {
                   source =
                       Arrays.asList(
-                          ((MContext) ((EContext) parent2).getParent())
-                              .e()
-                              .x()
-                              .TOKEN()
-                              .getText(),
+                          ((MContext) ((EContext) parent2).getParent()).e().x().TOKEN().getText(),
                           "identifier");
                 }
                 break;
