@@ -289,7 +289,7 @@ public class TestFhirUrlParser {
 
     List<List<String>> expected =
         Arrays.asList(
-            Arrays.asList("Patient?identifier1"),
+            Arrays.asList("Patient?identifier1|2"),
             Arrays.asList("Coverage?subscriber.identifier={Patient.identifier}"));
 
     assertEquals(expected, actual);
@@ -406,6 +406,121 @@ public class TestFhirUrlParser {
         Arrays.asList(
             Arrays.asList("MedicationRequest"),
             Arrays.asList("Patient?identifier={MedicationRequest.patient.identifier}"));
+
+    assertEquals(expected, actual);
+  }
+
+  @Test
+  public void testSearchPage0() throws IOException {
+
+    String simplestProgram =
+        "Observation?patient.identifier=http://example.com/fhir/identifier/mrn|123456";
+
+    List<List<String>> actual = toUrls(simplestProgram);
+    System.out.println(actual);
+
+    List<List<String>> expected =
+        Arrays.asList(
+            Arrays.asList(
+                "Observation?patient.identifier=http://example.com/fhir/identifier/mrn|123456"));
+
+    assertEquals(expected, actual);
+  }
+
+  @Test
+  public void testSearchPage1() throws IOException {
+
+    String simplestProgram = "Patient?_id=23";
+
+    List<List<String>> actual = toUrls(simplestProgram);
+    System.out.println(actual);
+
+    List<List<String>> expected = Arrays.asList(Arrays.asList("Patient?_id=23"));
+
+    assertEquals(expected, actual);
+  }
+
+  @Test
+  public void testSearchPage2() throws IOException {
+
+    String simplestProgram = "Patient/23";
+
+    List<List<String>> actual = toUrls(simplestProgram);
+    System.out.println(actual);
+
+    List<List<String>> expected = Arrays.asList(Arrays.asList("Patient/23"));
+
+    assertEquals(expected, actual);
+  }
+
+  @Test
+  public void testSearchPage3() throws IOException {
+
+    String simplestProgram = "Observation?_lastUpdated=gt2010-10-01";
+
+    List<List<String>> actual = toUrls(simplestProgram);
+    System.out.println(actual);
+
+    List<List<String>> expected =
+        Arrays.asList(Arrays.asList("Observation?_lastUpdated=gt2010-10-01"));
+
+    assertEquals(expected, actual);
+  }
+
+  @Test
+  public void testSearchPage4() throws IOException {
+
+    String simplestProgram = "Condition?_tag=http://acme.org/codes|needs-review";
+
+    List<List<String>> actual = toUrls(simplestProgram);
+    System.out.println(actual);
+
+    List<List<String>> expected =
+        Arrays.asList(Arrays.asList("Condition?_tag=http://acme.org/codes|needs-review"));
+
+    assertEquals(expected, actual);
+  }
+
+  @Test
+  public void testSearchPage5() throws IOException {
+
+    String simplestProgram =
+        "DiagnosticReport?_profile=http://hl7.org/fhir/StructureDefinition/lipid";
+
+    List<List<String>> actual = toUrls(simplestProgram);
+    System.out.println(actual);
+
+    List<List<String>> expected =
+        Arrays.asList(
+            Arrays.asList(
+                "DiagnosticReport?_profile=http://hl7.org/fhir/StructureDefinition/lipid"));
+
+    assertEquals(expected, actual);
+  }
+
+  @Test
+  public void testSearchPage6() throws IOException {
+
+    String simplestProgram = "DiagnosticReport?_profile=Profile/lipid";
+
+    List<List<String>> actual = toUrls(simplestProgram);
+    System.out.println(actual);
+
+    List<List<String>> expected =
+        Arrays.asList(Arrays.asList("DiagnosticReport?_profile=Profile/lipid"));
+
+    assertEquals(expected, actual);
+  }
+
+  @Test
+  public void testSearchPage7() throws IOException {
+
+    String simplestProgram = "RiskAssessment?probability=gt0.8";
+
+    List<List<String>> actual = toUrls(simplestProgram);
+    System.out.println(actual);
+
+    List<List<String>> expected = Arrays.asList(Arrays.asList("RiskAssessment?probability=gt0.8"));
 
     assertEquals(expected, actual);
   }

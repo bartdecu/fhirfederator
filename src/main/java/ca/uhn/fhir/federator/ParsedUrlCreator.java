@@ -27,9 +27,9 @@ public class ParsedUrlCreator {
   public Optional<ParsedUrl> createUrl() {
     ParserRuleContext parent = resourceCtx.getParent();
     String resource =
-        ((FContext) resourceCtx).IDENTIFIER() == null
+        ((FContext) resourceCtx).TOKEN() == null
             ? null
-            : ((FContext) resourceCtx).IDENTIFIER().getText();
+            : ((FContext) resourceCtx).TOKEN().getText();
     ParsedUrl url = null;
 
     String clazz = parent.getClass().getSimpleName();
@@ -45,8 +45,7 @@ public class ParsedUrlCreator {
           List<String> key = Arrays.asList("identifier");
           String source = resource;
           boolean iterate = false;
-          if (httpParam.k().u() != null
-              && "iterate".equals(httpParam.k().u().IDENTIFIER().getText())) {
+          if (httpParam.k().u() != null && "iterate".equals(httpParam.k().u().TOKEN().getText())) {
             iterate = true;
           }
 
@@ -60,11 +59,11 @@ public class ParsedUrlCreator {
           url =
               new ParsedUrl(
                   resource,
-                  Arrays.asList(((VContext) parent).e().x().IDENTIFIER().getText(), "identifier"),
-                  ((SContext) ref).a().f().IDENTIFIER().getText(),
+                  Arrays.asList(((VContext) parent).e().x().TOKEN().getText(), "identifier"),
+                  ((SContext) ref).a().f().TOKEN().getText(),
                   Arrays.asList("identifier"));
         } else {
-          url = new ParsedUrl(resource, ((VContext) parent).i().IDENTIFIER().getText());
+          url = new ParsedUrl(resource, ((VContext) parent).i().getText());
         }
         break;
       case "JContext":
@@ -76,7 +75,7 @@ public class ParsedUrlCreator {
           List<String> target = null;
           switch (clazz2) {
             case "JContext":
-              target = Arrays.asList(((JContext) parent2).l().IDENTIFIER().getText(), "identifier");
+              target = Arrays.asList(((JContext) parent2).l().TOKEN().getText(), "identifier");
               break;
             case "EContext":
               target = Arrays.asList("identifier");
@@ -84,8 +83,7 @@ public class ParsedUrlCreator {
           }
           List<String> source = null;
           if (((JContext) parent).m().e() != null) {
-            source =
-                Arrays.asList(((JContext) parent).m().e().x().IDENTIFIER().getText(), "identifier");
+            source = Arrays.asList(((JContext) parent).m().e().x().TOKEN().getText(), "identifier");
           } else {
             source = Arrays.asList("identifier");
           }
@@ -93,7 +91,7 @@ public class ParsedUrlCreator {
               new ParsedUrl(
                   resource,
                   source,
-                  ((FContext) a.getResources().get(0).get(1)).IDENTIFIER().getText(),
+                  ((FContext) a.getResources().get(0).get(1)).TOKEN().getText(),
                   target);
 
         } else {
@@ -119,7 +117,7 @@ public class ParsedUrlCreator {
               new ParsedUrl(
                   resource,
                   Arrays.asList("identifier"),
-                  ((FContext) b.getResources().get(0).get(1)).IDENTIFIER().getText(),
+                  ((FContext) b.getResources().get(0).get(1)).TOKEN().getText(),
                   Arrays.asList("identifier"));
 
         } else {
@@ -150,7 +148,7 @@ public class ParsedUrlCreator {
                 if (((PContext) httpParam).k().e() != null) {
                   source =
                       Arrays.asList(
-                          ((PContext) httpParam).k().e().x().IDENTIFIER().getText(), "identifier");
+                          ((PContext) httpParam).k().e().x().TOKEN().getText(), "identifier");
                   target = Arrays.asList("identifier");
                 } else {
                   String specialParameter = ((PContext) httpParam).k().q().SPECIAL().getText();
@@ -169,8 +167,7 @@ public class ParsedUrlCreator {
 
                 break;
               case "JContext":
-                target =
-                    Arrays.asList(((JContext) parent2).l().IDENTIFIER().getText(), "identifier");
+                target = Arrays.asList(((JContext) parent2).l().TOKEN().getText(), "identifier");
                 source = Arrays.asList("identifier");
                 break;
               case "EContext":
@@ -179,20 +176,12 @@ public class ParsedUrlCreator {
                 if (((EContext) parent2).getParent() instanceof KContext) {
                   source =
                       Arrays.asList(
-                          ((KContext) ((EContext) parent2).getParent())
-                              .e()
-                              .x()
-                              .IDENTIFIER()
-                              .getText(),
+                          ((KContext) ((EContext) parent2).getParent()).e().x().TOKEN().getText(),
                           "identifier");
                 } else {
                   source =
                       Arrays.asList(
-                          ((MContext) ((EContext) parent2).getParent())
-                              .e()
-                              .x()
-                              .IDENTIFIER()
-                              .getText(),
+                          ((MContext) ((EContext) parent2).getParent()).e().x().TOKEN().getText(),
                           "identifier");
                 }
                 break;
@@ -201,9 +190,9 @@ public class ParsedUrlCreator {
                 new ParsedUrl(
                     resource,
                     source,
-                    ((FContext) c.getResources().get(0).get(0)).IDENTIFIER() == null
+                    ((FContext) c.getResources().get(0).get(0)).TOKEN() == null
                         ? null
-                        : ((FContext) c.getResources().get(0).get(0)).IDENTIFIER().getText(),
+                        : ((FContext) c.getResources().get(0).get(0)).TOKEN().getText(),
                     target);
           } else {
             List<String> source = Arrays.asList(httpParam.k().getText());
