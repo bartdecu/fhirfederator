@@ -19,8 +19,7 @@ e : x COLON f DOT e | x DOT e | x;
 x : TOKEN;
 h : g COLON j;
 f : TOKEN;
-i : TOKEN | IDENTIFIER;
-t : IDENTIFIER;
+i : DECIMAL | TOKEN | IDENTIFIER;
 g : HAS;
 j : f COLON l COLON m;
 l : TOKEN;
@@ -28,14 +27,14 @@ m : h | e;
 o : OPERATOR;
 u : TOKEN;
 b : TOKEN;
-w : DECIMAL | IDENTIFIER | URL PIPE IDENTIFIER | URN PIPE IDENTIFIER;
+w : i | URL | URN | URL PIPE i (PIPE i)? | URN PIPE i (PIPE i)? | DECIMAL PIPE URL? PIPE i;
 n : IDENTIFIER;
 r : PROFILE;
 
 
 
 //LEXER
-fragment NSEPARATOR : [a-zA-Z\-]+ ;//(DOT | COLON | SLASH | QM | AMP | EQ | COMMA) ;
+fragment NSEPARATOR : [a-zA-Z\-]+ ;
 fragment UPPERCASE  : [A-Z] ;
 fragment STRING : [a-zA-Z0-9\-.]+;
 fragment DIGITS : [0-9]+ ;
@@ -56,8 +55,8 @@ PROFILE: 'Profile';
 SPECIAL: '_'NSEPARATOR;
 OPERATOR: '$'NSEPARATOR;
 //IDENTIFIER: (((STRING '://' STRING? ((STRING ('.' STRING)*) | (DIGITS '.' DIGITS '.' DIGITS '.' DIGITS)) (':' DIGITS)? ('/' (STRING ('/' STRING)*))? )? | 'urn:' STRING ':' ALLOWEDINURN ) PIPE)? XSTRING ;
-DECIMAL: [a-z] [a-z] DIGITS DOT DIGITS ;
+DECIMAL: ([a-z] [a-z])? DIGITS (DOT DIGITS ('e' ( '-' )? DIGITS )? )? ;
 TOKEN: NSEPARATOR ;
 IDENTIFIER: XSTRING ;
-URL: NSEPARATOR '://' STRING? ((STRING ('.' STRING)*) | (DIGITS '.' DIGITS '.' DIGITS '.' DIGITS)) (':' DIGITS)? ('/' (STRING ('/' STRING)*))?  ;
+URL: NSEPARATOR '://' STRING? ((STRING ('.' STRING)*) | (DIGITS '.' DIGITS '.' DIGITS '.' DIGITS)) (':' DIGITS)? ('/' (STRING ('/' STRING)*))? (QM XSTRING EQ TOKEN (SLASH STRING)? )? ;
 URN: 'urn:' STRING ':' ALLOWEDINURN ;
