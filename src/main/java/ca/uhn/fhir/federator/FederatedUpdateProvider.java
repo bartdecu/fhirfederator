@@ -23,8 +23,6 @@ public class FederatedUpdateProvider extends FederatedProvider {
   /**
    * Constructor
    *
-   * @param rr
-   * @param cr
    */
   public FederatedUpdateProvider(
       FhirContext ctx,
@@ -45,7 +43,7 @@ public class FederatedUpdateProvider extends FederatedProvider {
 
       Optional<IGenericClient> client = getClient(Update.class, resource);
 
-      if (!client.isPresent()) {
+      if (client.isEmpty()) {
         throw new UnprocessableEntityException(
             Msg.code(636) + "No memberserver available for the update of this resource");
       }

@@ -26,7 +26,7 @@ public class FederatedReadProvider extends FederatedProvider {
 
     Optional<IGenericClient> client = getClient(Read.class, null);
 
-    if (!client.isPresent()) {
+    if (client.isEmpty()) {
       throw new ResourceNotFoundException(theId);
     }
 

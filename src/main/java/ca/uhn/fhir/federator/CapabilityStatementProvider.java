@@ -10,8 +10,8 @@ import ca.uhn.fhir.rest.client.api.IGenericClient;
 
 public class CapabilityStatementProvider {
 
-  private ResourceRegistry rr;
-  private ClientRegistry cr;
+  private final ResourceRegistry rr;
+  private final ClientRegistry cr;
 
   public CapabilityStatementProvider(ClientRegistry cr, ResourceRegistry rr) {
     this.cr = cr;

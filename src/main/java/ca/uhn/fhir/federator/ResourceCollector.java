@@ -9,12 +9,12 @@ import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.fhirpath.IFhirPath;
 
 public class ResourceCollector {
-  private List<IBase> input;
-  private List<String> searchParams;
-  private SearchParam2FhirPathRegistry s2f;
-  private ResourceRegistry rr;
-  private ClientRegistry cr;
-  private FhirContext ctx;
+  private final List<IBase> input;
+  private final List<String> searchParams;
+  private final SearchParam2FhirPathRegistry s2f;
+  private final ResourceRegistry rr;
+  private final ClientRegistry cr;
+  private final FhirContext ctx;
 
   public ResourceCollector(
       FhirContext ctx,

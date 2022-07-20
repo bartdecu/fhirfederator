@@ -1,6 +1,5 @@
 package ca.uhn.fhir.federator;
 
-import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.collections4.keyvalue.DefaultMapEntry;
@@ -40,7 +39,7 @@ public class ParsedUrl {
   }
 
   public ParsedUrl(String resource, String technicalId) {
-    this(resource, Arrays.asList("_id"), technicalId);
+    this(resource, List.of("_id"), technicalId);
   }
 
   public ParsedUrl(String resource) {
@@ -62,7 +61,7 @@ public class ParsedUrl {
       this.placeholder = null;
     } else {
       this.placeholder =
-          new DefaultMapEntry<String, List<String>>(placeholderResource, placeholderKey);
+          new DefaultMapEntry<>(placeholderResource, placeholderKey);
     }
   }
 
@@ -131,11 +130,8 @@ public class ParsedUrl {
       return true;
     }
     // key en value mogen samen opgevuld zijn
-    if (this.key != null && !this.key.isEmpty() && !StringUtils.isEmpty(this.value)) {
-      return true;
-    }
+    return this.key != null && !this.key.isEmpty() && !StringUtils.isEmpty(this.value);
     // de rest mag niet
-    return false;
   }
 
   @Override
@@ -167,8 +163,8 @@ public class ParsedUrl {
       if (other.resource != null) return false;
     } else if (!resource.equals(other.resource)) return false;
     if (value == null) {
-      if (other.value != null) return false;
-    } else if (!value.equals(other.value)) return false;
-    return true;
+      return other.value == null;
+    } else
+      return value.equals(other.value);
   }
 }

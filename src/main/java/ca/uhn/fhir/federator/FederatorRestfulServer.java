@@ -1,5 +1,6 @@
 package ca.uhn.fhir.federator;
 
+import ca.uhn.fhir.federator.FederatorProperties.ServerDesc;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -33,17 +34,15 @@ import ca.uhn.fhir.rest.server.interceptor.ResponseHighlighterInterceptor;
 public class FederatorRestfulServer extends RestfulServer {
 
   public static final String ORG_HL_7_FHIR_R_4_MODEL_PREFIX = "org.hl7.fhir.r4.model.";
-  private final FederatorProperties configuration;
   private static final Logger ourLog = LoggerFactory.getLogger(FederatorRestfulServer.class);
 
   public FederatorRestfulServer(FederatorProperties configuration) {
-    this.configuration = configuration;
 
     // Create a context for the appropriate version
     setFhirContext(FhirContext.forR4());
     ClientRegistry cr =
         new ClientRegistry(
-            configuration.getMembers().stream().map(x -> x.getUrl()).collect(Collectors.toList()),
+            configuration.getMembers().stream().map(ServerDesc::getUrl).collect(Collectors.toList()),
             this.getFhirContext());
     ResourceRegistry rr = new ResourceRegistry(configuration.getResources().getDefault());
     for (Entry<String, ResourceConfig> entry : configuration.resources.other.entrySet()) {
@@ -60,13 +59,9 @@ public class FederatorRestfulServer extends RestfulServer {
     }
 
     sps.forEach(
-        sp -> {
-          sp.getBase()
-              .forEach(
-                  base -> {
-                    s2f.put(base + "." + sp.getCode(), sp.getExpression());
-                  });
-        });
+        sp -> sp.getBase()
+            .forEach(
+                base -> s2f.put(base + "." + sp.getCode(), sp.getExpression())));
 
     File pagingFile = setupPagingFile();
 
@@ -80,27 +75,27 @@ public class FederatorRestfulServer extends RestfulServer {
                 this.getFhirContext(),
                 cr,
                 rr,
-                (Class<? extends IBaseResource>) ((IBaseResource) object).getClass()));
+                ((IBaseResource) object).getClass()));
         registerProvider(
             new FederatedCreateProvider(
                 this.getFhirContext(),
                 cr,
                 rr,
-                (Class<? extends IBaseResource>) ((IBaseResource) object).getClass()));
+                ((IBaseResource) object).getClass()));
         registerProvider(
             new FederatedUpdateProvider(
                 this.getFhirContext(),
                 cr,
                 rr,
                 s2f,
-                (Class<? extends IBaseResource>) ((IBaseResource) object).getClass()));
+                ((IBaseResource) object).getClass()));
         registerProvider(
             new FederatedDeleteProvider(
                 this.getFhirContext(),
                 cr,
                 rr,
                 s2f,
-                (Class<? extends IBaseResource>) ((IBaseResource) object).getClass()));
+                ((IBaseResource) object).getClass()));
 
       } catch (IllegalArgumentException | SecurityException e) {
         ourLog.info(e.getMessage());
@@ -124,29 +119,27 @@ public class FederatorRestfulServer extends RestfulServer {
   }
 
   private List<?> getModelClasses() {
-    var clazzes =
-        getFhirContext().getResourceTypes().stream()
-            .map(
-                s -> {
-                  try {
-                    if ("List".equalsIgnoreCase(s)) {
-                      return Class.forName(ORG_HL_7_FHIR_R_4_MODEL_PREFIX + s + "Resource")
-                          .getDeclaredConstructor()
-                          .newInstance();
-                    }
-                    return Class.forName(ORG_HL_7_FHIR_R_4_MODEL_PREFIX + s)
-                        .getDeclaredConstructor()
-                        .newInstance();
-                  } catch (ClassNotFoundException
-                      | NoSuchMethodException
-                      | InstantiationException
-                      | IllegalAccessException
-                      | InvocationTargetException e) {
-                    throw new RuntimeException(e.getMessage(), e);
-                  }
-                })
-            .collect(Collectors.toList());
-    return clazzes;
+    return getFhirContext().getResourceTypes().stream()
+        .map(
+            s -> {
+              try {
+                if ("List".equalsIgnoreCase(s)) {
+                  return Class.forName(ORG_HL_7_FHIR_R_4_MODEL_PREFIX + s + "Resource")
+                      .getDeclaredConstructor()
+                      .newInstance();
+                }
+                return Class.forName(ORG_HL_7_FHIR_R_4_MODEL_PREFIX + s)
+                    .getDeclaredConstructor()
+                    .newInstance();
+              } catch (ClassNotFoundException
+                  | NoSuchMethodException
+                  | InstantiationException
+                  | IllegalAccessException
+                  | InvocationTargetException e) {
+                throw new RuntimeException(e.getMessage(), e);
+              }
+            })
+        .collect(Collectors.toList());
   }
 
   private List<SearchParameter> getSearchParametersFromNpmPackage(Package package_) {
@@ -158,12 +151,12 @@ public class FederatorRestfulServer extends RestfulServer {
       CloseableHttpClient client = b.build();
       HttpUriRequest req =
           new HttpGet(
-              Optional.<String>ofNullable(package_.getLocation())
+              Optional.ofNullable(package_.getLocation())
                       .orElse("https://packages2.fhir.org/packages")
                   + "/"
-                  + Optional.<String>ofNullable(package_.getId()).orElse("hl7.fhir.r4.core")
+                  + Optional.ofNullable(package_.getId()).orElse("hl7.fhir.r4.core")
                   + "/"
-                  + Optional.<String>ofNullable(package_.getVersion()).orElse("4.0.1"));
+                  + Optional.ofNullable(package_.getVersion()).orElse("4.0.1"));
       response = client.execute(req);
       if (!(response.getStatusLine().getStatusCode() < 200)
           && !(response.getStatusLine().getStatusCode() > 299)) {

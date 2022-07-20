@@ -18,13 +18,12 @@ import ca.uhn.fhir.rest.server.SimpleBundleProvider;
 
 public class ParameterNode implements Node {
 
-  private List<ParsedUrl> parsedUrls;
-  private ParameterExecutor parameterExecutor;
-  private ResourceRegistry rr;
-  private ClientRegistry cr;
-  private FhirContext ctx;
-  private SearchParam2FhirPathRegistry s2f;
-  private boolean iterate;
+  private final List<ParsedUrl> parsedUrls;
+  private final ResourceRegistry rr;
+  private final ClientRegistry cr;
+  private final FhirContext ctx;
+  private final SearchParam2FhirPathRegistry s2f;
+  private final boolean iterate;
 
   public ParameterNode(
       List<ParsedUrl> parsedUrls,
@@ -37,7 +36,7 @@ public class ParameterNode implements Node {
     this.cr = cr;
     this.ctx = ctx;
     this.s2f = s2f;
-    this.iterate = parsedUrls.stream().anyMatch(x -> x.isIterate());
+    this.iterate = parsedUrls.stream().anyMatch(ParsedUrl::isIterate);
   }
 
   @Override
@@ -46,7 +45,7 @@ public class ParameterNode implements Node {
   }
 
   public IBundleProvider executeWithReference(IBundleProvider reference) {
-    parameterExecutor = new ParameterExecutor(parsedUrls, rr, cr, ctx, s2f);
+    ParameterExecutor parameterExecutor = new ParameterExecutor(parsedUrls, rr, cr, ctx, s2f);
     if (reference != null) {
       List<IBaseResource> resources = reference.getAllResources();
       Map<String, List<IBaseResource>> resourceCachePerParameter =

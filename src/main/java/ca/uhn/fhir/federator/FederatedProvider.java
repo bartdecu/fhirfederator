@@ -1,6 +1,6 @@
 package ca.uhn.fhir.federator;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -30,20 +30,15 @@ public abstract class FederatedProvider implements IResourceProvider {
       org.slf4j.LoggerFactory.getLogger(FederatedProvider.class);
   public static final String RFC_HTTP_ERROR_CODE = "#section-10";
   public static final String RFC2616 = "https://datatracker.ietf.org/doc/html/rfc2616";
-  private Class<? extends IBaseResource> br;
-  private ClientRegistry cr;
-  private ResourceRegistry rr;
-  private FhirContext ctx;
-  private SearchParam2FhirPathRegistry s2f;
-  private FederatedSearchProvider fsp;
+  private final Class<? extends IBaseResource> br;
+  private final ClientRegistry cr;
+  private final ResourceRegistry rr;
+  private final FhirContext ctx;
+  private final FederatedSearchProvider fsp;
 
   /**
    * Constructor
    *
-   * @param ctx
-   * @param br
-   * @param rr
-   * @param cr
    */
   protected FederatedProvider(
       FhirContext ctx,
@@ -55,7 +50,6 @@ public abstract class FederatedProvider implements IResourceProvider {
     this.br = br;
     this.cr = cr;
     this.rr = rr;
-    this.s2f = s2f;
 
     this.fsp = s2f == null ? null : new FederatedSearchProvider(cr, rr, ctx, s2f);
   }
@@ -74,10 +68,7 @@ public abstract class FederatedProvider implements IResourceProvider {
 
     Optional<ServerResourceConfig> preferred =
         servers.stream().filter(x -> evaluate(action, resource, x)).findFirst();
-    if (!preferred.isPresent()) {
-      return Optional.empty();
-    }
-    return Optional.ofNullable(cr.getClient(preferred.get().getServer()));
+    return preferred.map(serverResourceConfig -> cr.getClient(serverResourceConfig.getServer()));
   }
 
   private Boolean evaluate(Class<?> action, IBaseResource resource, ServerResourceConfig config) {
@@ -85,8 +76,8 @@ public abstract class FederatedProvider implements IResourceProvider {
     return new ResourceConfigEvaluator(ctx, action, resource, config, cr, rr).execute();
   }
 
-  protected Optional<IGenericClient> getClient(Class<Delete> delete) {
-    return getClient(delete, null);
+  protected Optional<IGenericClient> getClient() {
+    return getClient(Delete.class, null);
   }
 
   protected abstract MethodOutcome action(
@@ -97,20 +88,20 @@ public abstract class FederatedProvider implements IResourceProvider {
     String id = x.getIdPart();
     String versionString = x.getVersionIdPart();
     Optional<IGenericClient> client;
-    Stream<MethodOutcome> outcomeStream = null;
+    Stream<MethodOutcome> outcomeStream;
     if (x.hasBaseUrl()) {
       client = Optional.ofNullable(getCtx().newRestfulGenericClient(x.getBaseUrl()));
     } else {
       client = getClient(action, resource);
     }
-    if (!client.isPresent()) {
+    if (client.isEmpty()) {
       throw new UnprocessableEntityException(
           Msg.code(636) + "No memberserver available for the update of this resource");
     }
     IdType newId = new IdType(client.get().getServerBase(), type, id, versionString);
     try {
       MethodOutcome outcome = action(resource, client.get(), newId);
-      outcomeStream = Arrays.<MethodOutcome>asList(outcome).stream();
+      outcomeStream = Stream.of(outcome);
 
     } catch (BaseServerResponseException e) {
       ourLog.error("{}", e.getMessage());
@@ -119,8 +110,8 @@ public abstract class FederatedProvider implements IResourceProvider {
           new MethodOutcome()
               .setId(new IdType(RFC2616, RFC_HTTP_ERROR_CODE, Integer.toString(status), null));
       outcome.setResponseHeaders(
-          new SingletonMap<String, List<String>>("Id", Arrays.asList(newId.getValue())));
-      outcomeStream = Arrays.<MethodOutcome>asList(outcome).stream();
+          new SingletonMap<>("Id", Collections.singletonList(newId.getValue())));
+      outcomeStream = Stream.of(outcome);
     }
     return outcomeStream;
   }
@@ -136,7 +127,7 @@ public abstract class FederatedProvider implements IResourceProvider {
     String type = getResourceType().getSimpleName();
     List<IIdType> updatableResources =
         result.getAllResources().stream()
-            .map(x -> x.getIdElement())
+            .map(IBaseResource::getIdElement)
             .filter(x -> type.equals(x.getResourceType()))
             .collect(Collectors.toList());
 

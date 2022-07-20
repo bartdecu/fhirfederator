@@ -1,28 +1,7 @@
 package ca.uhn.fhir.federator;
 
 import static ca.uhn.fhir.federator.TreeUtils.toPrettyTree;
-
-import java.io.IOException;
-import java.net.URLDecoder;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.antlr.v4.runtime.CharStream;
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.TokenSource;
-import org.antlr.v4.runtime.TokenStream;
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.federator.FhirUrlParser.SContext;
@@ -34,18 +13,37 @@ import ca.uhn.fhir.federator.ast.ParameterNode;
 import ca.uhn.fhir.rest.annotation.Operation;
 import ca.uhn.fhir.rest.api.server.IBundleProvider;
 import ca.uhn.fhir.rest.server.exceptions.InvalidRequestException;
+import java.io.IOException;
+import java.net.URLDecoder;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import org.antlr.v4.runtime.CharStream;
+import org.antlr.v4.runtime.CharStreams;
+import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.TokenSource;
+import org.antlr.v4.runtime.TokenStream;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 
 public class FederatedSearchProvider {
   static final org.slf4j.Logger ourLog =
       org.slf4j.LoggerFactory.getLogger(FederatedSearchProvider.class);
 
-  private ClientRegistry cr;
+  private final ClientRegistry cr;
 
-  private ResourceRegistry rr;
+  private final ResourceRegistry rr;
 
   private FhirContext ctx;
 
-  private SearchParam2FhirPathRegistry s2f;
+  private final SearchParam2FhirPathRegistry s2f;
 
   private boolean handlingStrict;
 
@@ -67,7 +65,6 @@ public class FederatedSearchProvider {
 
   @Operation(
       name = "$doFederation",
-      manualResponse = false,
       manualRequest = true,
       idempotent = true,
       global = true)
@@ -103,17 +100,12 @@ public class FederatedSearchProvider {
     } else {
       toParse = tenantAndResource;
     }
-    IBundleProvider result = searchWithAstQueryAnalysis(toParse.substring(1));
 
-    return result;
+    return searchWithAstQueryAnalysis(toParse.substring(1));
   }
 
   public IBundleProvider searchWithAstQueryAnalysis(String toParse) {
-    try {
-      toParse = URLDecoder.decode(toParse, "UTF-8");
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+    toParse = URLDecoder.decode(toParse, UTF_8);
 
     CharStream inputCharStream = CharStreams.fromString(toParse);
     TokenSource tokenSource = new FhirUrlLexer(inputCharStream);
@@ -156,12 +148,10 @@ public class FederatedSearchProvider {
     List<Node> chain = new ArrayList<>();
     chain.add(and);
     chain.addAll(perIncludeParameter);
-    Node include =
-        chain.stream()
-            .reduce((a, b) -> new IncludeNode(a, (ParameterNode) b))
-            .orElse(NoopNode.EMPTY);
 
-    return include;
+    return chain.stream()
+        .reduce((a, b) -> new IncludeNode(a, (ParameterNode) b))
+        .orElse(NoopNode.EMPTY);
   }
 
   private List<ParsedUrl> createPartialUrls(
@@ -174,9 +164,7 @@ public class FederatedSearchProvider {
         .map(resourceInParam -> new ParsedUrlCreator(resourceInParam, httpParam).createUrl())
         .flatMap(
             opt ->
-                opt.isPresent()
-                    ? Arrays.<ParsedUrl>asList(opt.get()).stream()
-                    : Stream.<ParsedUrl>empty())
+                opt.stream())
         .map(parsedUrl -> validateKey(parsedUrl, handlingStrict, s2f))
         .collect(Collectors.toList());
   }

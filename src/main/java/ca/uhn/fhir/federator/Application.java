@@ -19,7 +19,7 @@ public class Application {
 
   @Bean
   public ServletRegistrationBean<RestfulServer> fhirServlet() {
-    return new ServletRegistrationBean<RestfulServer>(
+    return new ServletRegistrationBean<>(
         new FederatorRestfulServer(configuration), "/fhir/*");
   }
 }

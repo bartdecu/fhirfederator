@@ -17,7 +17,7 @@ public class FhirUrlAnalyser extends FhirUrlBaseVisitor<Object> {
 
   private int currentIndex = 0;
   private final List<List<ParserRuleContext>> resources = new ArrayList<>();
-  private List<ParserRuleContext> httpParams = new ArrayList<>();
+  private final List<ParserRuleContext> httpParams = new ArrayList<>();
   private final Map<ParserRuleContext, Integer> toIndex = new HashMap<>();
 
   public List<ParserRuleContext> getAndParameters() {
@@ -77,25 +77,12 @@ public class FhirUrlAnalyser extends FhirUrlBaseVisitor<Object> {
   @Override
   public Object visitF(FContext ctx) {
     while (resources.size() <= currentIndex) {
-      resources.add(new ArrayList<ParserRuleContext>());
+      resources.add(new ArrayList<>());
     }
     List<ParserRuleContext> temp = resources.get(currentIndex);
     temp.add(ctx);
     return super.visitF(ctx);
   }
-  /*
-    @Override
-    public Object visitE(EContext ctx) {
-      while (resources.size() <= currentIndex) {
-        resources.add(new ArrayList<ParserRuleContext>());
-      }
-      List<ParserRuleContext> temp = resources.get(currentIndex);
-      if (ctx.x()!=null && ctx.f() == null && ctx.e()!=null){
-        temp.add(new FContext(ctx,-1));
-      }
-      return super.visitE(ctx);
-    }
-  */
   @Override
   public Object visitP(PContext ctx) {
     httpParams.add(ctx);
@@ -107,7 +94,7 @@ public class FhirUrlAnalyser extends FhirUrlBaseVisitor<Object> {
   public Object visitC(CContext ctx) {
     currentIndex++;
     while (resources.size() <= currentIndex) {
-      resources.add(new ArrayList<ParserRuleContext>());
+      resources.add(new ArrayList<>());
     }
     Object result = super.visitC(ctx);
     currentIndex--;

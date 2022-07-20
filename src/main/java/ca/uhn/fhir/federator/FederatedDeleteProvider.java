@@ -19,8 +19,6 @@ public class FederatedDeleteProvider extends FederatedProvider {
   /**
    * Constructor
    *
-   * @param rr
-   * @param cr
    */
   public FederatedDeleteProvider(
       FhirContext ctx,
@@ -36,9 +34,9 @@ public class FederatedDeleteProvider extends FederatedProvider {
 
     if (theId != null) {
 
-      Optional<IGenericClient> client = getClient(Delete.class);
+      Optional<IGenericClient> client = getClient();
 
-      if (!client.isPresent()) {
+      if (client.isEmpty()) {
         throw new UnprocessableEntityException(
             Msg.code(636) + "No memberserver available for the deletion of this resource");
       }
