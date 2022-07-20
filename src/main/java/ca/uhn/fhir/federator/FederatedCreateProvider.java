@@ -15,10 +15,7 @@ import ca.uhn.fhir.rest.server.exceptions.UnprocessableEntityException;
 
 public class FederatedCreateProvider extends FederatedProvider {
 
-  /**
-   * Constructor
-   *
-   */
+  /** Constructor */
   public FederatedCreateProvider(
       FhirContext ctx, ClientRegistry cr, ResourceRegistry rr, Class<? extends IBaseResource> br) {
     super(ctx, cr, rr, br, null);

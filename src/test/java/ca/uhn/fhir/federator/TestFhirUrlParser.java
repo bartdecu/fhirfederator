@@ -12,7 +12,6 @@ import java.util.Arrays;
 import java.util.BitSet;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import org.antlr.v4.runtime.ANTLRErrorListener;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
@@ -213,8 +212,7 @@ public class TestFhirUrlParser {
     System.out.println(actual);
 
     List<List<String>> expected =
-        List.of(
-            List.of("Observation?subject.identifier=urn:oid:1.2.36.146.595.217.0.1|12345"));
+        List.of(List.of("Observation?subject.identifier=urn:oid:1.2.36.146.595.217.0.1|12345"));
 
     assertEquals(expected, actual);
   }
@@ -306,8 +304,7 @@ public class TestFhirUrlParser {
 
     List<List<String>> expected =
         Arrays.asList(
-            List.of("Patient"),
-            List.of("Encounter?subject.identifier={Patient.identifier}"));
+            List.of("Patient"), List.of("Encounter?subject.identifier={Patient.identifier}"));
 
     assertEquals(expected, actual);
   }
@@ -322,8 +319,7 @@ public class TestFhirUrlParser {
 
     List<List<String>> expected =
         Arrays.asList(
-            List.of("Patient"),
-            List.of("EpisodeOfCare?patient.identifier={Patient.identifier}"));
+            List.of("Patient"), List.of("EpisodeOfCare?patient.identifier={Patient.identifier}"));
 
     assertEquals(expected, actual);
   }
@@ -462,8 +458,7 @@ public class TestFhirUrlParser {
     List<List<String>> actual = toUrls(simplestProgram);
     System.out.println(actual);
 
-    List<List<String>> expected =
-        List.of(List.of("Observation?_lastUpdated=gt2010-10-01"));
+    List<List<String>> expected = List.of(List.of("Observation?_lastUpdated=gt2010-10-01"));
 
     assertEquals(expected, actual);
   }
@@ -492,9 +487,7 @@ public class TestFhirUrlParser {
     System.out.println(actual);
 
     List<List<String>> expected =
-        List.of(
-            List.of(
-                "DiagnosticReport?_profile=http://hl7.org/fhir/StructureDefinition/lipid"));
+        List.of(List.of("DiagnosticReport?_profile=http://hl7.org/fhir/StructureDefinition/lipid"));
 
     assertEquals(expected, actual);
   }
@@ -507,8 +500,7 @@ public class TestFhirUrlParser {
     List<List<String>> actual = toUrls(simplestProgram);
     System.out.println(actual);
 
-    List<List<String>> expected =
-        List.of(List.of("DiagnosticReport?_profile=Profile/lipid"));
+    List<List<String>> expected = List.of(List.of("DiagnosticReport?_profile=Profile/lipid"));
 
     assertEquals(expected, actual);
   }
@@ -553,8 +545,7 @@ public class TestFhirUrlParser {
     System.out.println(actual);
 
     List<List<String>> expected =
-        List.of(
-            List.of("Condition?code:in=http://snomed.info/sct?fhir_vs=isa/126851005"));
+        List.of(List.of("Condition?code:in=http://snomed.info/sct?fhir_vs=isa/126851005"));
 
     assertEquals(expected, actual);
   }
@@ -568,8 +559,7 @@ public class TestFhirUrlParser {
     System.out.println(actual);
 
     List<List<String>> expected =
-        List.of(
-            List.of("Observation?value-quantity=5.40e-3|http://unitsofmeasure.org|g"));
+        List.of(List.of("Observation?value-quantity=5.40e-3|http://unitsofmeasure.org|g"));
 
     assertEquals(expected, actual);
   }
@@ -582,8 +572,7 @@ public class TestFhirUrlParser {
     List<List<String>> actual = toUrls(simplestProgram);
     System.out.println(actual);
 
-    List<List<String>> expected =
-        List.of(List.of("Observation?value-quantity=5.4||mg"));
+    List<List<String>> expected = List.of(List.of("Observation?value-quantity=5.4||mg"));
 
     assertEquals(expected, actual);
   }
@@ -599,9 +588,7 @@ public class TestFhirUrlParser {
                         .map(
                             resourceInParam ->
                                 new ParsedUrlCreator(resourceInParam, httpParam).createUrl())
-                        .flatMap(
-                            opt ->
-                                opt.stream())
+                        .flatMap(opt -> opt.stream())
                         .collect(Collectors.toList()))
             .collect(Collectors.toList());
 
@@ -613,9 +600,7 @@ public class TestFhirUrlParser {
                         .map(
                             resourceInParam ->
                                 new ParsedUrlCreator(resourceInParam, httpParam).createUrl())
-                        .flatMap(
-                            opt ->
-                                opt.stream())
+                        .flatMap(opt -> opt.stream())
                         .collect(Collectors.toList()))
             .collect(Collectors.toList());
 

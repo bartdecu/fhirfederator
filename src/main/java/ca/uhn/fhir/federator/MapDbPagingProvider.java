@@ -56,7 +56,9 @@ public class MapDbPagingProvider implements IPagingProvider {
       String theMessageString = input.readUTF();
       IParser parser = ctx.newJsonParser();
       Bundle bundle = (Bundle) parser.parseResource(theMessageString);
-      return bundle.getEntry().stream().map(BundleEntryComponent::getResource).collect(Collectors.toList());
+      return bundle.getEntry().stream()
+          .map(BundleEntryComponent::getResource)
+          .collect(Collectors.toList());
     }
   }
 
@@ -88,7 +90,8 @@ public class MapDbPagingProvider implements IPagingProvider {
   }
 
   @Override
-  public IBundleProvider retrieveResultList(RequestDetails theRequestDetails, @NotNull String theSearchId) {
+  public IBundleProvider retrieveResultList(
+      RequestDetails theRequestDetails, @NotNull String theSearchId) {
     SimpleBundleProvider retVal = null;
 
     try {

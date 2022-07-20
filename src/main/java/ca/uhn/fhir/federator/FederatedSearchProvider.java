@@ -20,7 +20,6 @@ import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.antlr.v4.runtime.CharStream;
@@ -63,11 +62,7 @@ public class FederatedSearchProvider {
     this.s2f = s2f;
   }
 
-  @Operation(
-      name = "$doFederation",
-      manualRequest = true,
-      idempotent = true,
-      global = true)
+  @Operation(name = "$doFederation", manualRequest = true, idempotent = true, global = true)
   public IBundleProvider manualInputAndOutput(
       HttpServletRequest theServletRequest, HttpServletResponse theServletResponse)
       throws IOException {
@@ -162,9 +157,7 @@ public class FederatedSearchProvider {
       SearchParam2FhirPathRegistry s2f) {
     return visitor.getResourcesForHttpParam(dependent, httpParam).stream()
         .map(resourceInParam -> new ParsedUrlCreator(resourceInParam, httpParam).createUrl())
-        .flatMap(
-            opt ->
-                opt.stream())
+        .flatMap(opt -> opt.stream())
         .map(parsedUrl -> validateKey(parsedUrl, handlingStrict, s2f))
         .collect(Collectors.toList());
   }

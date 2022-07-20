@@ -20,10 +20,7 @@ public class FederatedUpdateProvider extends FederatedProvider {
   private static final org.slf4j.Logger ourLog =
       org.slf4j.LoggerFactory.getLogger(FederatedUpdateProvider.class);
 
-  /**
-   * Constructor
-   *
-   */
+  /** Constructor */
   public FederatedUpdateProvider(
       FhirContext ctx,
       ClientRegistry cr,

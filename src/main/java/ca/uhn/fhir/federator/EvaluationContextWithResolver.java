@@ -85,12 +85,12 @@ public class EvaluationContextWithResolver implements IEvaluationContext {
                 server -> {
                   try {
                     return Stream.of(
-                            (Base)
-                                ctx.newRestfulGenericClient(server)
-                                    .read()
-                                    .resource(resource)
-                                    .withUrl(url)
-                                    .execute());
+                        (Base)
+                            ctx.newRestfulGenericClient(server)
+                                .read()
+                                .resource(resource)
+                                .withUrl(url)
+                                .execute());
                   } catch (Throwable e) {
                     ourLog.error("Reference not resolved:{} {} {}", server, url, e.getMessage());
                     return Stream.empty();

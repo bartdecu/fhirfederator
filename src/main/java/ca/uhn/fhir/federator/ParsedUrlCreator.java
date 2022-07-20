@@ -27,10 +27,7 @@ public class ParsedUrlCreator {
 
   public Optional<ParsedUrl> createUrl() {
     ParserRuleContext parent = resourceCtx.getParent();
-    String resource =
-        resourceCtx.TOKEN() == null
-            ? null
-            : resourceCtx.TOKEN().getText();
+    String resource = resourceCtx.TOKEN() == null ? null : resourceCtx.TOKEN().getText();
     ParsedUrl url = null;
 
     String clazz = parent.getClass().getSimpleName();
@@ -48,7 +45,8 @@ public class ParsedUrlCreator {
               httpParam.k().u() != null && "iterate".equals(httpParam.k().u().TOKEN().getText());
 
           url =
-              new ParsedUrl(iterate, altResource, key, resource, Arrays.asList(target, "identifier"));
+              new ParsedUrl(
+                  iterate, altResource, key, resource, Arrays.asList(target, "identifier"));
         } else if (((VContext) parent).e() != null) {
           ParserRuleContext ref = parent;
           while (!(ref instanceof SContext)) {
@@ -144,9 +142,7 @@ public class ParsedUrlCreator {
             switch (clazz2) {
               case "VContext":
                 if (httpParam.k().e() != null) {
-                  source =
-                      Arrays.asList(
-                          httpParam.k().e().x().TOKEN().getText(), "identifier");
+                  source = Arrays.asList(httpParam.k().e().x().TOKEN().getText(), "identifier");
                   target = List.of("identifier");
                 } else {
                   String specialParameter = httpParam.k().q().SPECIAL().getText();
@@ -165,18 +161,15 @@ public class ParsedUrlCreator {
                 source = List.of("identifier");
                 break;
               case "EContext":
-                target =
-                    List.of("identifier"); // ((RContext)parent2).t().IDENTIFIER().getText();
+                target = List.of("identifier"); // ((RContext)parent2).t().IDENTIFIER().getText();
                 if (parent2.getParent() instanceof KContext) {
                   source =
                       Arrays.asList(
-                          ((KContext) parent2.getParent()).e().x().TOKEN().getText(),
-                          "identifier");
+                          ((KContext) parent2.getParent()).e().x().TOKEN().getText(), "identifier");
                 } else {
                   source =
                       Arrays.asList(
-                          ((MContext) parent2.getParent()).e().x().TOKEN().getText(),
-                          "identifier");
+                          ((MContext) parent2.getParent()).e().x().TOKEN().getText(), "identifier");
                 }
                 break;
             }

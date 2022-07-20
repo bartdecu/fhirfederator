@@ -60,8 +60,7 @@ public class ParsedUrl {
     if (placeholderKey == null || placeholderKey.isEmpty() || placeholderResource == null) {
       this.placeholder = null;
     } else {
-      this.placeholder =
-          new DefaultMapEntry<>(placeholderResource, placeholderKey);
+      this.placeholder = new DefaultMapEntry<>(placeholderResource, placeholderKey);
     }
   }
 
@@ -164,7 +163,6 @@ public class ParsedUrl {
     } else if (!resource.equals(other.resource)) return false;
     if (value == null) {
       return other.value == null;
-    } else
-      return value.equals(other.value);
+    } else return value.equals(other.value);
   }
 }

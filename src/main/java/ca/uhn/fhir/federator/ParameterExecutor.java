@@ -157,8 +157,7 @@ public class ParameterExecutor {
     IBase baseResource;
     if (resource instanceof Reference) {
       baseResource =
-          new ResourceCollector(
-                  ctx, cr, rr, s2f, List.of(resource), List.of("resolve()"))
+          new ResourceCollector(ctx, cr, rr, s2f, List.of(resource), List.of("resolve()"))
               .execute()
               .get(0);
     } else {
@@ -251,8 +250,7 @@ public class ParameterExecutor {
 
     List<IBaseResource> own =
         bundle.getEntry().stream()
-            .filter(
-                bec -> bec.getResource() != null)
+            .filter(bec -> bec.getResource() != null)
             .map(bec -> ((IBaseResource) bec.getResource()))
             .collect(Collectors.toList());
     ourLog.info("Client request Url: {} #{}", completeUrl, own.size());

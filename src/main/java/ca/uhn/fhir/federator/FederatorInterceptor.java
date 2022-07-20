@@ -59,6 +59,5 @@ public class FederatorInterceptor {
       theRequestDetails.setResourceName(null);
       ourLog.error("doFederation2");
     }
-
   }
 }

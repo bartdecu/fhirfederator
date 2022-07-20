@@ -36,10 +36,7 @@ public abstract class FederatedProvider implements IResourceProvider {
   private final FhirContext ctx;
   private final FederatedSearchProvider fsp;
 
-  /**
-   * Constructor
-   *
-   */
+  /** Constructor */
   protected FederatedProvider(
       FhirContext ctx,
       ClientRegistry cr,

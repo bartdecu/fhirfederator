@@ -16,10 +16,7 @@ import ca.uhn.fhir.rest.server.exceptions.UnprocessableEntityException;
 
 public class FederatedDeleteProvider extends FederatedProvider {
 
-  /**
-   * Constructor
-   *
-   */
+  /** Constructor */
   public FederatedDeleteProvider(
       FhirContext ctx,
       ClientRegistry cr,

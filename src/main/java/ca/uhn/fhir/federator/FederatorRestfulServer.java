@@ -42,7 +42,9 @@ public class FederatorRestfulServer extends RestfulServer {
     setFhirContext(FhirContext.forR4());
     ClientRegistry cr =
         new ClientRegistry(
-            configuration.getMembers().stream().map(ServerDesc::getUrl).collect(Collectors.toList()),
+            configuration.getMembers().stream()
+                .map(ServerDesc::getUrl)
+                .collect(Collectors.toList()),
             this.getFhirContext());
     ResourceRegistry rr = new ResourceRegistry(configuration.getResources().getDefault());
     for (Entry<String, ResourceConfig> entry : configuration.resources.other.entrySet()) {
@@ -59,9 +61,7 @@ public class FederatorRestfulServer extends RestfulServer {
     }
 
     sps.forEach(
-        sp -> sp.getBase()
-            .forEach(
-                base -> s2f.put(base + "." + sp.getCode(), sp.getExpression())));
+        sp -> sp.getBase().forEach(base -> s2f.put(base + "." + sp.getCode(), sp.getExpression())));
 
     File pagingFile = setupPagingFile();
 
@@ -72,30 +72,16 @@ public class FederatorRestfulServer extends RestfulServer {
         ourLog.info("Loading {}", ((IBaseResource) object).getClass().getSimpleName());
         registerProvider(
             new FederatedReadProvider(
-                this.getFhirContext(),
-                cr,
-                rr,
-                ((IBaseResource) object).getClass()));
+                this.getFhirContext(), cr, rr, ((IBaseResource) object).getClass()));
         registerProvider(
             new FederatedCreateProvider(
-                this.getFhirContext(),
-                cr,
-                rr,
-                ((IBaseResource) object).getClass()));
+                this.getFhirContext(), cr, rr, ((IBaseResource) object).getClass()));
         registerProvider(
             new FederatedUpdateProvider(
-                this.getFhirContext(),
-                cr,
-                rr,
-                s2f,
-                ((IBaseResource) object).getClass()));
+                this.getFhirContext(), cr, rr, s2f, ((IBaseResource) object).getClass()));
         registerProvider(
             new FederatedDeleteProvider(
-                this.getFhirContext(),
-                cr,
-                rr,
-                s2f,
-                ((IBaseResource) object).getClass()));
+                this.getFhirContext(), cr, rr, s2f, ((IBaseResource) object).getClass()));
 
       } catch (IllegalArgumentException | SecurityException e) {
         ourLog.info(e.getMessage());

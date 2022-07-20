@@ -18,8 +18,8 @@ public class TreeUtils {
   private TreeUtils() {}
 
   /**
-   * Pretty print out a whole tree.  is used on the node payloads to get the
-   * text for the nodes. (Derived from Trees.toStringTree(....))
+   * Pretty print out a whole tree. is used on the node payloads to get the text for the nodes.
+   * (Derived from Trees.toStringTree(....))
    */
   public static String toPrettyTree(final Tree t, final List<String> ruleNames) {
     level = 0;
