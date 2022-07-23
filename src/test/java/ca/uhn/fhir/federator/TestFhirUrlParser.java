@@ -6,12 +6,12 @@ import ca.uhn.fhir.federator.FhirUrlParser.SContext;
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import org.antlr.v4.runtime.ANTLRErrorListener;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
@@ -27,7 +27,7 @@ import org.junit.jupiter.api.Test;
 
 public class TestFhirUrlParser {
 
-  class TestErrorListener implements ANTLRErrorListener {
+  static class TestErrorListener implements ANTLRErrorListener {
 
     private boolean fail = false;
 
@@ -81,7 +81,7 @@ public class TestFhirUrlParser {
     List<List<String>> actual = toUrls(simplestProgram);
 
     List<List<String>> expected =
-        Arrays.asList(
+        List.of(
             Arrays.asList(
                 "Patient?identifier={Observation.patient.identifier}",
                 "Observation?identifier={AuditEvent.entity.identifier}",
@@ -99,7 +99,7 @@ public class TestFhirUrlParser {
     List<List<String>> actual = toUrls(simplestProgram);
 
     List<List<String>> expected =
-        Arrays.asList(
+        List.of(
             Arrays.asList(
                 "DiagnosticReport?subject.identifier={Patient.identifier}", "Patient?name=Sarah"));
 
@@ -114,7 +114,7 @@ public class TestFhirUrlParser {
     List<List<String>> actual = toUrls(simplestProgram);
 
     List<List<String>> expected =
-        Arrays.asList(
+        List.of(
             Arrays.asList(
                 "Encounter?subject.identifier={Patient.identifier}",
                 "Patient?_id=78a14cbe-8968-49fd-a231-d43e6619399f"));
@@ -130,7 +130,7 @@ public class TestFhirUrlParser {
     List<List<String>> actual = toUrls(simplestProgram);
 
     List<List<String>> expected =
-        Arrays.asList(
+        List.of(
             Arrays.asList(
                 "Encounter?subject.identifier={Patient.identifier}",
                 "Patient?birthdate=1987-02-20"));
@@ -146,7 +146,7 @@ public class TestFhirUrlParser {
     List<List<String>> actual = toUrls(simplestProgram);
     System.out.println(actual);
 
-    List<List<String>> expected = Arrays.asList(Arrays.asList("Patient?birthdate:missing=true"));
+    List<List<String>> expected = List.of(List.of("Patient?birthdate:missing=true"));
 
     assertEquals(expected, actual);
   }
@@ -182,8 +182,8 @@ public class TestFhirUrlParser {
     System.out.println(actual);
 
     List<List<String>> expected =
-        Arrays.asList(
-            Arrays.asList(
+        List.of(
+            List.of(
                 "Patient?identifier=https://github.com/synthetichealth/synthea|621338a9-01f4-49d4-b852-14507a8bf8c7"));
 
     assertEquals(expected, actual);
@@ -198,7 +198,7 @@ public class TestFhirUrlParser {
     System.out.println(actual);
 
     List<List<String>> expected =
-        Arrays.asList(Arrays.asList("Patient?name=Sarah"), Arrays.asList("Patient?name=Jones"));
+        Arrays.asList(List.of("Patient?name=Sarah"), List.of("Patient?name=Jones"));
 
     assertEquals(expected, actual);
   }
@@ -212,8 +212,7 @@ public class TestFhirUrlParser {
     System.out.println(actual);
 
     List<List<String>> expected =
-        Arrays.asList(
-            Arrays.asList("Observation?subject.identifier=urn:oid:1.2.36.146.595.217.0.1|12345"));
+        List.of(List.of("Observation?subject.identifier=urn:oid:1.2.36.146.595.217.0.1|12345"));
 
     assertEquals(expected, actual);
   }
@@ -226,7 +225,7 @@ public class TestFhirUrlParser {
     List<List<String>> actual = toUrls(simplestProgram);
     System.out.println(actual);
 
-    List<List<String>> expected = Arrays.asList(Arrays.asList("Encounter?_id=1"));
+    List<List<String>> expected = List.of(List.of("Encounter?_id=1"));
 
     assertEquals(expected, actual);
   }
@@ -244,7 +243,7 @@ public class TestFhirUrlParser {
         Arrays.asList(
             Arrays.asList(
                 "Observation?subject.identifier={Patient.identifier}", "Patient?name=Hodges"),
-            Arrays.asList("Observation?code=http://loinc.org|29463-7"));
+            List.of("Observation?code=http://loinc.org|29463-7"));
 
     assertEquals(expected, actual);
   }
@@ -257,7 +256,7 @@ public class TestFhirUrlParser {
     List<List<String>> actual = toUrls(simplestProgram);
     System.out.println(actual);
 
-    List<List<String>> expected = Arrays.asList(Arrays.asList("Patient/example"));
+    List<List<String>> expected = List.of(List.of("Patient/example"));
 
     assertEquals(expected, actual);
   }
@@ -272,7 +271,7 @@ public class TestFhirUrlParser {
 
     List<List<String>> expected =
         Arrays.asList(
-            Arrays.asList(
+            List.of(
                 "Coverage?type=http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|1,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|11,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|111,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|112,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|113,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|119,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|12,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|121,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|122,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|123,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|129,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|13,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|14,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|19,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|191,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|2,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|21,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|211,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|212,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|213,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|219,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|22,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|23,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|25,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|26,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|29,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|291,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|299,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|3,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|31,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|311,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|3111,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|3112,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|3113,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|3114,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|3115,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|3116,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|3119,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|312,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|3121,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|3122,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|3123,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|313,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|32,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|321,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|3211,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|3212,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|32121,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|32122,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|32123,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|32124,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|32125,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|32126,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|32127,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|32128,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|322,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|3221,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|3222,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|3223,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|3229,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|33,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|331,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|332,http://www.phdsc.org/standards/pdfs/SourceofPaymentTypologyVersion6FINALSeptember2015.pdf|333"),
             Arrays.asList(
                 "Coverage?policy-holder.identifier={Patient.identifier}", "Patient?_id=example"));
@@ -289,8 +288,8 @@ public class TestFhirUrlParser {
 
     List<List<String>> expected =
         Arrays.asList(
-            Arrays.asList("Patient?identifier1|2"),
-            Arrays.asList("Coverage?subscriber.identifier={Patient.identifier}"));
+            List.of("Patient?identifier1|2"),
+            List.of("Coverage?subscriber.identifier={Patient.identifier}"));
 
     assertEquals(expected, actual);
   }
@@ -305,8 +304,7 @@ public class TestFhirUrlParser {
 
     List<List<String>> expected =
         Arrays.asList(
-            Arrays.asList("Patient"),
-            Arrays.asList("Encounter?subject.identifier={Patient.identifier}"));
+            List.of("Patient"), List.of("Encounter?subject.identifier={Patient.identifier}"));
 
     assertEquals(expected, actual);
   }
@@ -321,8 +319,7 @@ public class TestFhirUrlParser {
 
     List<List<String>> expected =
         Arrays.asList(
-            Arrays.asList("Patient"),
-            Arrays.asList("EpisodeOfCare?patient.identifier={Patient.identifier}"));
+            List.of("Patient"), List.of("EpisodeOfCare?patient.identifier={Patient.identifier}"));
 
     assertEquals(expected, actual);
   }
@@ -338,9 +335,9 @@ public class TestFhirUrlParser {
 
     List<List<String>> expected =
         Arrays.asList(
-            Arrays.asList("MedicationDispense"),
-            Arrays.asList("null?identifier={MedicationDispense.prescription.identifier}"),
-            Arrays.asList("null?identifier={MedicationRequest.performer.identifier}"));
+            List.of("MedicationDispense"),
+            List.of("null?identifier={MedicationDispense.prescription.identifier}"),
+            List.of("null?identifier={MedicationRequest.performer.identifier}"));
 
     assertEquals(expected, actual);
   }
@@ -355,8 +352,8 @@ public class TestFhirUrlParser {
 
     List<List<String>> expected =
         Arrays.asList(
-            Arrays.asList("Patient?name=Hodges"),
-            Arrays.asList("Encounter?subject.identifier={Patient.identifier}"));
+            List.of("Patient?name=Hodges"),
+            List.of("Encounter?subject.identifier={Patient.identifier}"));
 
     assertEquals(expected, actual);
   }
@@ -372,8 +369,8 @@ public class TestFhirUrlParser {
 
     List<List<String>> expected =
         Arrays.asList(
-            Arrays.asList("Patient?identifier=http://hl7.org/fhir/sid/us-ssn|999622736"),
-            Arrays.asList("Encounter?subject.identifier={Patient.identifier}"));
+            List.of("Patient?identifier=http://hl7.org/fhir/sid/us-ssn|999622736"),
+            List.of("Encounter?subject.identifier={Patient.identifier}"));
 
     assertEquals(expected, actual);
   }
@@ -388,8 +385,8 @@ public class TestFhirUrlParser {
 
     List<List<String>> expected =
         Arrays.asList(
-            Arrays.asList("MedicationRequest"),
-            Arrays.asList("null?identifier={MedicationRequest.patient.identifier}"));
+            List.of("MedicationRequest"),
+            List.of("null?identifier={MedicationRequest.patient.identifier}"));
 
     assertEquals(expected, actual);
   }
@@ -404,8 +401,8 @@ public class TestFhirUrlParser {
 
     List<List<String>> expected =
         Arrays.asList(
-            Arrays.asList("MedicationRequest"),
-            Arrays.asList("Patient?identifier={MedicationRequest.patient.identifier}"));
+            List.of("MedicationRequest"),
+            List.of("Patient?identifier={MedicationRequest.patient.identifier}"));
 
     assertEquals(expected, actual);
   }
@@ -420,8 +417,8 @@ public class TestFhirUrlParser {
     System.out.println(actual);
 
     List<List<String>> expected =
-        Arrays.asList(
-            Arrays.asList(
+        List.of(
+            List.of(
                 "Observation?patient.identifier=http://example.com/fhir/identifier/mrn|123456"));
 
     assertEquals(expected, actual);
@@ -435,7 +432,7 @@ public class TestFhirUrlParser {
     List<List<String>> actual = toUrls(simplestProgram);
     System.out.println(actual);
 
-    List<List<String>> expected = Arrays.asList(Arrays.asList("Patient?_id=23"));
+    List<List<String>> expected = List.of(List.of("Patient?_id=23"));
 
     assertEquals(expected, actual);
   }
@@ -448,7 +445,7 @@ public class TestFhirUrlParser {
     List<List<String>> actual = toUrls(simplestProgram);
     System.out.println(actual);
 
-    List<List<String>> expected = Arrays.asList(Arrays.asList("Patient/23"));
+    List<List<String>> expected = List.of(List.of("Patient/23"));
 
     assertEquals(expected, actual);
   }
@@ -461,8 +458,7 @@ public class TestFhirUrlParser {
     List<List<String>> actual = toUrls(simplestProgram);
     System.out.println(actual);
 
-    List<List<String>> expected =
-        Arrays.asList(Arrays.asList("Observation?_lastUpdated=gt2010-10-01"));
+    List<List<String>> expected = List.of(List.of("Observation?_lastUpdated=gt2010-10-01"));
 
     assertEquals(expected, actual);
   }
@@ -476,7 +472,7 @@ public class TestFhirUrlParser {
     System.out.println(actual);
 
     List<List<String>> expected =
-        Arrays.asList(Arrays.asList("Condition?_tag=http://acme.org/codes|needs-review"));
+        List.of(List.of("Condition?_tag=http://acme.org/codes|needs-review"));
 
     assertEquals(expected, actual);
   }
@@ -491,9 +487,7 @@ public class TestFhirUrlParser {
     System.out.println(actual);
 
     List<List<String>> expected =
-        Arrays.asList(
-            Arrays.asList(
-                "DiagnosticReport?_profile=http://hl7.org/fhir/StructureDefinition/lipid"));
+        List.of(List.of("DiagnosticReport?_profile=http://hl7.org/fhir/StructureDefinition/lipid"));
 
     assertEquals(expected, actual);
   }
@@ -506,8 +500,7 @@ public class TestFhirUrlParser {
     List<List<String>> actual = toUrls(simplestProgram);
     System.out.println(actual);
 
-    List<List<String>> expected =
-        Arrays.asList(Arrays.asList("DiagnosticReport?_profile=Profile/lipid"));
+    List<List<String>> expected = List.of(List.of("DiagnosticReport?_profile=Profile/lipid"));
 
     assertEquals(expected, actual);
   }
@@ -520,7 +513,7 @@ public class TestFhirUrlParser {
     List<List<String>> actual = toUrls(simplestProgram);
     System.out.println(actual);
 
-    List<List<String>> expected = Arrays.asList(Arrays.asList("RiskAssessment?probability=gt0.8"));
+    List<List<String>> expected = List.of(List.of("RiskAssessment?probability=gt0.8"));
 
     assertEquals(expected, actual);
   }
@@ -535,8 +528,8 @@ public class TestFhirUrlParser {
     System.out.println(actual);
 
     List<List<String>> expected =
-        Arrays.asList(
-            Arrays.asList(
+        List.of(
+            List.of(
                 "Patient?identifier:otype=http://terminology.hl7.org/CodeSystem/v2-0203|MR|446053"));
 
     assertEquals(expected, actual);
@@ -552,8 +545,7 @@ public class TestFhirUrlParser {
     System.out.println(actual);
 
     List<List<String>> expected =
-        Arrays.asList(
-            Arrays.asList("Condition?code:in=http://snomed.info/sct?fhir_vs=isa/126851005"));
+        List.of(List.of("Condition?code:in=http://snomed.info/sct?fhir_vs=isa/126851005"));
 
     assertEquals(expected, actual);
   }
@@ -567,8 +559,7 @@ public class TestFhirUrlParser {
     System.out.println(actual);
 
     List<List<String>> expected =
-        Arrays.asList(
-            Arrays.asList("Observation?value-quantity=5.40e-3|http://unitsofmeasure.org|g"));
+        List.of(List.of("Observation?value-quantity=5.40e-3|http://unitsofmeasure.org|g"));
 
     assertEquals(expected, actual);
   }
@@ -581,8 +572,7 @@ public class TestFhirUrlParser {
     List<List<String>> actual = toUrls(simplestProgram);
     System.out.println(actual);
 
-    List<List<String>> expected =
-        Arrays.asList(Arrays.asList("Observation?value-quantity=5.4||mg"));
+    List<List<String>> expected = List.of(List.of("Observation?value-quantity=5.4||mg"));
 
     assertEquals(expected, actual);
   }
@@ -598,11 +588,7 @@ public class TestFhirUrlParser {
                         .map(
                             resourceInParam ->
                                 new ParsedUrlCreator(resourceInParam, httpParam).createUrl())
-                        .flatMap(
-                            opt ->
-                                opt.isPresent()
-                                    ? Arrays.<ParsedUrl>asList(opt.get()).stream()
-                                    : Stream.<ParsedUrl>empty())
+                        .flatMap(opt -> opt.stream())
                         .collect(Collectors.toList()))
             .collect(Collectors.toList());
 
@@ -614,29 +600,25 @@ public class TestFhirUrlParser {
                         .map(
                             resourceInParam ->
                                 new ParsedUrlCreator(resourceInParam, httpParam).createUrl())
-                        .flatMap(
-                            opt ->
-                                opt.isPresent()
-                                    ? Arrays.<ParsedUrl>asList(opt.get()).stream()
-                                    : Stream.<ParsedUrl>empty())
+                        .flatMap(opt -> opt.stream())
                         .collect(Collectors.toList()))
             .collect(Collectors.toList());
 
     List<List<String>> retVal = new ArrayList<>();
     retVal.addAll(
         perAndParameter.stream()
-            .map(param -> param.stream().map(x -> x.toString()).collect(Collectors.toList()))
+            .map(param -> param.stream().map(ParsedUrl::toString).collect(Collectors.toList()))
             .collect(Collectors.toList()));
     retVal.addAll(
         perIncludeParameter.stream()
-            .map(param -> param.stream().map(x -> x.toString()).collect(Collectors.toList()))
+            .map(param -> param.stream().map(ParsedUrl::toString).collect(Collectors.toList()))
             .collect(Collectors.toList()));
 
     return retVal;
   }
 
   public static FhirUrlAnalyser toVisitor(String simplestProgram) throws IOException {
-    simplestProgram = URLDecoder.decode(simplestProgram, "UTF-8");
+    simplestProgram = URLDecoder.decode(simplestProgram, StandardCharsets.UTF_8);
     CharStream inputCharStream = CharStreams.fromReader(new StringReader(simplestProgram));
     TokenSource tokenSource = new FhirUrlLexer(inputCharStream);
     TokenStream inputTokenStream = new CommonTokenStream(tokenSource);

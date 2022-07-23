@@ -25,7 +25,7 @@ public class NoopNode implements Node {
   /** */
   public static final NoopNode EMPTY = new EmptyNoopNode();
 
-  private List<IBaseResource> resources;
+  private final List<IBaseResource> resources;
 
   public NoopNode() {
     resources = EMPTY_LIST;

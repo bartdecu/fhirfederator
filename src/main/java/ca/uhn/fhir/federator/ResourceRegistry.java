@@ -8,8 +8,8 @@ import ca.uhn.fhir.federator.FederatorProperties.ResourceConfig;
 
 public class ResourceRegistry {
 
-  private Map<String, ResourceConfig> map = new LinkedHashMap<>();
-  private ResourceConfig defaultConfig;
+  private final Map<String, ResourceConfig> map = new LinkedHashMap<>();
+  private final ResourceConfig defaultConfig;
 
   public ResourceRegistry(ResourceConfig defaults) {
     this.defaultConfig = defaults;
@@ -31,7 +31,7 @@ public class ResourceRegistry {
   public int getMaxOr4Resource(String resource) {
     ResourceConfig config = getServer4Resource(resource);
 
-    Optional<Integer> min = Optional.<Integer>ofNullable(config.getMaxOr());
+    Optional<Integer> min = Optional.ofNullable(config.getMaxOr());
 
     return min.orElse(10);
   }

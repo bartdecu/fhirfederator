@@ -16,7 +16,7 @@ import ca.uhn.fhir.fhirpath.IFhirPath;
 
 public class FhirPathR4WithResolver implements IFhirPath {
 
-  private FHIRPathEngine myEngine;
+  private final FHIRPathEngine myEngine;
 
   public FhirPathR4WithResolver(FhirContext theCtx, ClientRegistry cr, ResourceRegistry rr) {
     IValidationSupport validationSupport = theCtx.getValidationSupport();

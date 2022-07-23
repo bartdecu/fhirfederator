@@ -87,9 +87,8 @@ public class FederatorProperties {
         if (other.locations != null) return false;
       } else if (!locations.equals(other.locations)) return false;
       if (maxOr == null) {
-        if (other.maxOr != null) return false;
-      } else if (!maxOr.equals(other.maxOr)) return false;
-      return true;
+        return other.maxOr == null;
+      } else return maxOr.equals(other.maxOr);
     }
   }
 

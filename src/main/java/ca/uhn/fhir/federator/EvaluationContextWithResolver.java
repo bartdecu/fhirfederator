@@ -1,6 +1,6 @@
 package ca.uhn.fhir.federator;
 
-import java.util.Arrays;
+import ca.uhn.fhir.federator.FederatorProperties.ServerResourceConfig;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -19,9 +19,9 @@ import ca.uhn.fhir.util.UrlUtil.UrlParts;
 public class EvaluationContextWithResolver implements IEvaluationContext {
   private static final org.slf4j.Logger ourLog =
       org.slf4j.LoggerFactory.getLogger(EvaluationContextWithResolver.class);
-  private IEvaluationContext delegate;
-  private FhirContext ctx;
-  private ResourceRegistry rr;
+  private final IEvaluationContext delegate;
+  private final FhirContext ctx;
+  private final ResourceRegistry rr;
 
   public EvaluationContextWithResolver(
       IEvaluationContext delegate, FhirContext ctx, ClientRegistry cr, ResourceRegistry rr) {
@@ -69,32 +69,31 @@ public class EvaluationContextWithResolver implements IEvaluationContext {
   public Base resolveReference(Object appContext, String url) throws FHIRException {
     UrlParts p = UrlUtil.parseUrl(url);
     String resource = p.getResourceType();
-    int till = url.lastIndexOf(resource, url.length());
+    int till = url.lastIndexOf(resource);
     List<String> servers;
     if (till < 1) {
       servers =
           rr.getServer4Resource(resource).getLocations().stream()
-              .map(x -> x.getServer())
+              .map(ServerResourceConfig::getServer)
               .collect(Collectors.toList());
     } else {
-      servers = Arrays.asList(url.substring(0, till));
+      servers = List.of(url.substring(0, till));
     }
     List<Base> retVal =
         servers.stream()
             .flatMap(
                 server -> {
                   try {
-                    return Arrays.asList(
+                    return Stream.of(
                         (Base)
                             ctx.newRestfulGenericClient(server)
                                 .read()
                                 .resource(resource)
                                 .withUrl(url)
-                                .execute())
-                        .stream();
+                                .execute());
                   } catch (Throwable e) {
                     ourLog.error("Reference not resolved:{} {} {}", server, url, e.getMessage());
-                    return Stream.<Base>empty();
+                    return Stream.empty();
                   }
                 })
             .collect(Collectors.toList());

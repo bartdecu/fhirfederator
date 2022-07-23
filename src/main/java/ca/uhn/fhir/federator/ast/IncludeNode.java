@@ -8,8 +8,8 @@ import ca.uhn.fhir.rest.api.server.IBundleProvider;
 import ca.uhn.fhir.rest.server.SimpleBundleProvider;
 
 public class IncludeNode implements Node {
-  private ParameterNode parameterNode;
-  private Node referenceNode;
+  private final ParameterNode parameterNode;
+  private final Node referenceNode;
 
   public IncludeNode(Node referenceNode, ParameterNode parameterNode) {
     this.referenceNode = referenceNode;

@@ -9,6 +9,8 @@ import java.util.stream.Collectors;
 
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.Bundle.BundleEntryComponent;
+import org.jetbrains.annotations.NotNull;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 import org.mapdb.DataInput2;
@@ -28,14 +30,14 @@ import ca.uhn.fhir.rest.server.SimpleBundleProvider;
 public class MapDbPagingProvider implements IPagingProvider {
 
   public static class ListIBaseResourceSerializer implements Serializer<List<IBaseResource>> {
-    private FhirContext ctx;
+    private final FhirContext ctx;
 
     public ListIBaseResourceSerializer(FhirContext ctx) {
       this.ctx = ctx;
     }
 
     @Override
-    public void serialize(DataOutput2 out, List<IBaseResource> value) throws IOException {
+    public void serialize(DataOutput2 out, @NotNull List<IBaseResource> value) throws IOException {
 
       IVersionSpecificBundleFactory fac = ctx.newBundleFactory();
       fac.addResourcesToBundle(value, BundleTypeEnum.COLLECTION, null, null, null);
@@ -54,22 +56,22 @@ public class MapDbPagingProvider implements IPagingProvider {
       String theMessageString = input.readUTF();
       IParser parser = ctx.newJsonParser();
       Bundle bundle = (Bundle) parser.parseResource(theMessageString);
-      return bundle.getEntry().stream().map(x -> x.getResource()).collect(Collectors.toList());
+      return bundle.getEntry().stream()
+          .map(BundleEntryComponent::getResource)
+          .collect(Collectors.toList());
     }
   }
 
-  private int defaultPageSize;
-  private int maximumPageSize;
-  private DB db;
-  private FhirContext ctx;
-  HTreeMap<String, List<IBaseResource>> map;
+  private final int defaultPageSize;
+  private final int maximumPageSize;
+  private final DB db;
+  final HTreeMap<String, List<IBaseResource>> map;
   private static final org.slf4j.Logger ourLog =
       org.slf4j.LoggerFactory.getLogger(MapDbPagingProvider.class);
 
   public MapDbPagingProvider(FhirContext ctx, File file, int defaultPageSize, int maximumPageSize) {
     this.defaultPageSize = defaultPageSize;
     this.maximumPageSize = maximumPageSize;
-    this.ctx = ctx;
     db = DBMaker.fileDB(file.getAbsolutePath()).fileMmapEnable().closeOnJvmShutdown().make();
     map =
         db.hashMap("paging", Serializer.STRING, new ListIBaseResourceSerializer(ctx))
@@ -88,16 +90,14 @@ public class MapDbPagingProvider implements IPagingProvider {
   }
 
   @Override
-  public IBundleProvider retrieveResultList(RequestDetails theRequestDetails, String theSearchId) {
+  public IBundleProvider retrieveResultList(
+      RequestDetails theRequestDetails, @NotNull String theSearchId) {
     SimpleBundleProvider retVal = null;
 
     try {
       retVal = new SimpleBundleProvider(map.getOrDefault(theSearchId, Collections.emptyList()));
     } catch (Exception e) {
       ourLog.error(e.getMessage(), e);
-    } finally {
-      // map.close();
-      // db.close();
     }
 
     return retVal;
@@ -114,9 +114,6 @@ public class MapDbPagingProvider implements IPagingProvider {
 
     } catch (Exception e) {
       ourLog.error(e.getMessage(), e);
-    } finally {
-      // map.close();
-      // db.close();
     }
 
     return id;

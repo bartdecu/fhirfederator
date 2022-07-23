@@ -11,7 +11,7 @@ import ca.uhn.fhir.rest.client.api.IGenericClient;
 
 public class ClientRegistry {
 
-  private Map<String, IGenericClient> map = new LinkedHashMap<>();
+  private final Map<String, IGenericClient> map = new LinkedHashMap<>();
 
   public ClientRegistry(List<String> bases, FhirContext ctx) {
 

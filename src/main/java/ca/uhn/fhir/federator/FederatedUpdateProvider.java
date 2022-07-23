@@ -20,12 +20,7 @@ public class FederatedUpdateProvider extends FederatedProvider {
   private static final org.slf4j.Logger ourLog =
       org.slf4j.LoggerFactory.getLogger(FederatedUpdateProvider.class);
 
-  /**
-   * Constructor
-   *
-   * @param rr
-   * @param cr
-   */
+  /** Constructor */
   public FederatedUpdateProvider(
       FhirContext ctx,
       ClientRegistry cr,
@@ -45,7 +40,7 @@ public class FederatedUpdateProvider extends FederatedProvider {
 
       Optional<IGenericClient> client = getClient(Update.class, resource);
 
-      if (!client.isPresent()) {
+      if (client.isEmpty()) {
         throw new UnprocessableEntityException(
             Msg.code(636) + "No memberserver available for the update of this resource");
       }

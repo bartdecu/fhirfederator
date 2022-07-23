@@ -8,7 +8,7 @@ import org.hl7.fhir.r4.model.Identifier;
 
 public class GetIdentifierHelper {
 
-  private Method getIdentifier;
+  private final Method getIdentifier;
 
   public GetIdentifierHelper(Class<?> clazz) {
     Method m = null;

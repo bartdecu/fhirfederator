@@ -2,8 +2,7 @@ package ca.uhn.fhir.federator;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.util.Arrays;
-
+import java.util.Collections;
 import org.hl7.fhir.r4.model.HumanName;
 import org.hl7.fhir.r4.model.Patient;
 import org.junit.jupiter.api.Test;
@@ -63,7 +62,7 @@ public class TestResourceConfigEvaluator {
     config.setServer("http://test/fhir");
 
     Patient patient = new Patient();
-    patient.setName(Arrays.asList(new HumanName().setFamily("Decuypere")));
+    patient.setName(Collections.singletonList(new HumanName().setFamily("Decuypere")));
 
     Boolean actual =
         new ResourceConfigEvaluator(
@@ -81,7 +80,7 @@ public class TestResourceConfigEvaluator {
     config.setServer("http://test/fhir");
 
     Patient patient = new Patient();
-    patient.setName(Arrays.asList(new HumanName().setFamily("Decuypere")));
+    patient.setName(Collections.singletonList(new HumanName().setFamily("Decuypere")));
 
     Boolean actual =
         new ResourceConfigEvaluator(
@@ -99,7 +98,7 @@ public class TestResourceConfigEvaluator {
     config.setServer("http://test/fhir");
 
     Patient patient = new Patient();
-    patient.setName(Arrays.asList(new HumanName().setFamily("Decuypere")));
+    patient.setName(Collections.singletonList(new HumanName().setFamily("Decuypere")));
 
     Boolean actual =
         new ResourceConfigEvaluator(
@@ -117,7 +116,7 @@ public class TestResourceConfigEvaluator {
     config.setServer("http://test/fhir");
 
     Patient patient = new Patient();
-    patient.setName(Arrays.asList(new HumanName().setFamily("Decuypere")));
+    patient.setName(Collections.singletonList(new HumanName().setFamily("Decuypere")));
 
     Boolean actual =
         new ResourceConfigEvaluator(

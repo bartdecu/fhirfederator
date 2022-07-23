@@ -1,6 +1,5 @@
 package ca.uhn.fhir.federator;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -25,8 +24,7 @@ public class FederatorInterceptor {
       HttpServletRequest theServletRequest,
       HttpServletResponse theServletResponse,
       RequestDetails theRequestDetails,
-      ServletRequestDetails theServletRequestDetails)
-      throws ServletException {
+      ServletRequestDetails theServletRequestDetails) {
     if (theRequestDetails.getRequestType().name().equalsIgnoreCase("PUT")) {
       ourLog.info("This is an update URL: {}", theRequestDetails.getCompleteUrl());
       return;
@@ -61,7 +59,5 @@ public class FederatorInterceptor {
       theRequestDetails.setResourceName(null);
       ourLog.error("doFederation2");
     }
-
-    return;
   }
 }

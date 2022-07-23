@@ -1,8 +1,10 @@
 package ca.uhn.fhir.federator;
 
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -26,11 +28,11 @@ import ca.uhn.fhir.rest.client.api.IGenericClient;
 public class ParameterExecutor {
   private static final org.slf4j.Logger ourLog =
       org.slf4j.LoggerFactory.getLogger(ParameterExecutor.class);
-  private List<ParsedUrl> urlsPerParameter;
-  private ResourceRegistry rr;
-  private ClientRegistry cr;
-  private FhirContext ctx;
-  private SearchParam2FhirPathRegistry s2f;
+  private final List<ParsedUrl> urlsPerParameter;
+  private final ResourceRegistry rr;
+  private final ClientRegistry cr;
+  private final FhirContext ctx;
+  private final SearchParam2FhirPathRegistry s2f;
   private Map<String, List<IBaseResource>> resourceCachePerParameter;
 
   public ParameterExecutor(
@@ -70,9 +72,7 @@ public class ParameterExecutor {
       }
     }
 
-    List<IBaseResource> parameterResources =
-        resourceCachePerParameter.get(urlsPerParameter.get(0).getResource());
-    return parameterResources;
+    return resourceCachePerParameter.get(urlsPerParameter.get(0).getResource());
   }
 
   private Stream<? extends IBaseResource> executeUrl(
@@ -82,7 +82,7 @@ public class ParameterExecutor {
     } else {
       IGenericClient client = cr.getClient(resourceConfig.getServer());
       String completeUrl;
-      completeUrl = resourceConfig.getServer() + "/" + executableUrl.toString();
+      completeUrl = resourceConfig.getServer() + "/" + executableUrl;
       ourLog.info("Client request Url: {}", completeUrl);
       return getResultsForURL(client, completeUrl).stream();
     }
@@ -90,7 +90,7 @@ public class ParameterExecutor {
 
   public List<ParsedUrl> createExecutableUrl(ParsedUrl url) {
     List<ParsedUrl> retVal = new ArrayList<>();
-    List<String> resources = Arrays.asList(url.getResource());
+    List<String> resources = Collections.singletonList(url.getResource());
     if (url.getResource() == null) {
       // _include case
       List<IBaseResource> list =
@@ -103,7 +103,7 @@ public class ParameterExecutor {
           new ResourceCollector(ctx, cr, rr, s2f, toResources, chainedSearchParams).execute();
       resources =
           classes.stream()
-              .map(resource -> createResourceFromReference(resource))
+              .map(this::createResourceFromReference)
               .map(y -> y.getClass().getSimpleName())
               .distinct()
               .collect(Collectors.toList());
@@ -120,7 +120,7 @@ public class ParameterExecutor {
             // filter identifiers to those we are really interested in
             List<String> importantIdentifiers =
                 rr.getServer4Resource(url.getPlaceholder().getKey()).getIdentifiers().stream()
-                    .flatMap(x -> x.stream())
+                    .flatMap(Collection::stream)
                     .collect(Collectors.toList());
             identifiers =
                 identifiers.stream()
@@ -154,11 +154,10 @@ public class ParameterExecutor {
   }
 
   private IBase createResourceFromReference(IBase resource) {
-    IBase baseResource = null;
+    IBase baseResource;
     if (resource instanceof Reference) {
       baseResource =
-          new ResourceCollector(
-                  ctx, cr, rr, s2f, Arrays.asList(resource), Arrays.asList("resolve()"))
+          new ResourceCollector(ctx, cr, rr, s2f, List.of(resource), List.of("resolve()"))
               .execute()
               .get(0);
     } else {
@@ -188,61 +187,56 @@ public class ParameterExecutor {
                 chainedSearchParams)
             .execute();
     return toProcess.stream()
-        .flatMap(resource -> handleReferenceResource(resource))
+        .flatMap(this::handleReferenceResource)
         .map(iBase -> (Identifier) iBase)
         .collect(Collectors.toList());
   }
 
   private List<String> sanitizeIdentifiers(List<Identifier> toProcess) {
-    List<String> identifiers =
-        toProcess.stream()
-            .flatMap(
-                x -> {
-                  Identifier id = (Identifier) x;
-                  Stream<String> out = null;
-                  if (id.getValue() == null) {
-                    out = Collections.<String>emptyList().stream();
-                  } else if (id.getSystem() == null) {
-                    out = Arrays.asList(id.getValue()).stream();
-                  } else {
-                    out = Arrays.<String>asList(id.getSystem() + "|" + id.getValue()).stream();
-                  }
-                  return out;
-                })
-            .distinct()
-            .map(
-                x -> {
-                  String encoded = null;
-                  try {
-                    encoded = URLEncoder.encode(x, "UTF-8");
-                  } catch (Exception e) {
-                  }
-                  ;
-                  return encoded;
-                })
-            .collect(Collectors.<String>toList());
-    return identifiers;
+    return toProcess.stream()
+        .flatMap(
+            x -> {
+              Stream<String> out;
+              if (x.getValue() == null) {
+                out = Stream.empty();
+              } else if (x.getSystem() == null) {
+                out = Stream.of(x.getValue());
+              } else {
+                out = Stream.of(x.getSystem() + "|" + x.getValue());
+              }
+              return out;
+            })
+        .distinct()
+        .map(
+            x -> {
+              String encoded = null;
+              try {
+                encoded = URLEncoder.encode(x, StandardCharsets.UTF_8);
+              } catch (Exception ignored) {
+              }
+              return encoded;
+            })
+        .collect(Collectors.<String>toList());
   }
 
   private Stream<? extends IBase> handleReferenceResource(IBase resource) {
     if (resource instanceof Reference) {
       Reference ref = (Reference) resource;
       if (ref.getIdentifier() != null && !ref.getIdentifier().isEmpty()) {
-        return Arrays.asList(ref.getIdentifier()).stream();
+        return Stream.of(ref.getIdentifier());
       } else {
         return new ResourceCollector(
-                ctx, cr, rr, s2f, Arrays.asList(resource), Arrays.asList("resolve()", "identifier"))
+                ctx, cr, rr, s2f, List.of(resource), Arrays.asList("resolve()", "identifier"))
             .execute().stream();
       }
     } else {
       return new ResourceCollector(
-              ctx, cr, rr, s2f, Arrays.asList(resource), Arrays.asList("identifier"))
+              ctx, cr, rr, s2f, Collections.singletonList(resource), List.of("identifier"))
           .execute().stream();
     }
   }
 
   private static List<IBaseResource> getResultsForURL(IGenericClient client, String completeUrl) {
-    List<IBaseResource> out = new ArrayList<>();
     Bundle bundle = new Bundle();
     try {
       bundle = client.search().byUrl(completeUrl).returnBundle(Bundle.class).execute();
@@ -256,15 +250,12 @@ public class ParameterExecutor {
 
     List<IBaseResource> own =
         bundle.getEntry().stream()
-            .filter(
-                bec -> {
-                  return bec.getResource() instanceof IBaseResource;
-                })
+            .filter(bec -> bec.getResource() != null)
             .map(bec -> ((IBaseResource) bec.getResource()))
             .collect(Collectors.toList());
     ourLog.info("Client request Url: {} #{}", completeUrl, own.size());
 
-    out.addAll(own);
+    List<IBaseResource> out = new ArrayList<>(own);
     if (!next.isEmpty()) {
       List<IBaseResource> other = getResultsForURL(client, next.get(0).getUrl());
       out.addAll(other);

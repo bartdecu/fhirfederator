@@ -11,8 +11,8 @@ import ca.uhn.fhir.rest.api.server.IBundleProvider;
 import ca.uhn.fhir.rest.server.SimpleBundleProvider;
 
 public class AndNode implements Node {
-  private List<Node> nodes;
-  private ResourceRegistry rr;
+  private final List<Node> nodes;
+  private final ResourceRegistry rr;
 
   public AndNode(ResourceRegistry rr, List<Node> nodes) {
     this.nodes = nodes;

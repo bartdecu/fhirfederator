@@ -18,13 +18,13 @@ public class ResourceConfigEvaluator {
   private static final org.slf4j.Logger ourLog =
       org.slf4j.LoggerFactory.getLogger(ResourceConfigEvaluator.class);
 
-  private Class<?> action;
-  private ServerResourceConfig config;
-  private FhirContext ctx;
-  private IBase resource;
+  private final Class<?> action;
+  private final ServerResourceConfig config;
+  private final FhirContext ctx;
+  private final IBase resource;
 
-  private ClientRegistry cr;
-  private ResourceRegistry rr;
+  private final ClientRegistry cr;
+  private final ResourceRegistry rr;
 
   public ResourceConfigEvaluator(
       FhirContext ctx,
@@ -53,7 +53,7 @@ public class ResourceConfigEvaluator {
     } else if (Delete.class.equals(action)) {
       toEval = config.getDelete();
     } else {
-      return (Boolean) null;
+      return null;
     }
 
     if (toEval == null) {
