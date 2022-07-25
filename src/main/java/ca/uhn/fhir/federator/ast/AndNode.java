@@ -51,4 +51,9 @@ public class AndNode implements Node {
                     .orElse(false))
         .collect(Collectors.toList());
   }
+
+  @Override
+  public String toString() {
+    return "AndNode [nodes=" + nodes + "]";
+  }
 }

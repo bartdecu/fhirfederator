@@ -130,6 +130,49 @@ public class FederatorRestfulServer extends RestfulServer {
 
   private List<SearchParameter> getSearchParametersFromNpmPackage(Package package_) {
     List<SearchParameter> sps = new ArrayList<>();
+    NpmPackage pkg = null;
+    if (package_.getLocation()==null){
+      String dir = System.getProperty("user.home")+File.separator +".fhir"+ File.separator + "packages";
+      pkg = getNpmPackageFromFhirCache(dir, package_);
+      if (pkg == null){
+        String url = "https://packages2.fhir.org/packages";
+        pkg = getNpmPackageFromFhirRegistry(url, package_);
+      }
+
+      
+    }else{
+      if(package_.getLocation().startsWith("http")){
+        pkg = getNpmPackageFromFhirRegistry(package_.getLocation(),package_);
+      } else {
+        pkg = getNpmPackageFromFhirCache(package_.getLocation(), package_);    
+      }
+    }
+    
+    if (pkg!=null){
+      getSearchParametersFromPackage(sps, pkg);
+    }
+    
+
+    return sps;
+  }
+  
+
+  private NpmPackage getNpmPackageFromFhirCache(String dir, Package package_) {
+  
+    String p = File.separator + Optional.ofNullable(package_.getId()).orElse("hl7.fhir.r4.core")+"#"+Optional.ofNullable(package_.getVersion()).orElse("4.0.1");
+    try {
+      NpmPackage pkg = NpmPackage.fromFolder(dir+p/*, null, new String[]{}*/);
+      pkg.loadAllFiles();
+      return pkg;
+    } catch (IOException e) {
+      
+      ourLog.error(e.getMessage(), e);
+      return null;
+    }
+    
+  }
+
+  private NpmPackage getNpmPackageFromFhirRegistry(String url, Package package_) {
     CloseableHttpResponse response = null;
     try {
 
@@ -137,8 +180,7 @@ public class FederatorRestfulServer extends RestfulServer {
       CloseableHttpClient client = b.build();
       HttpUriRequest req =
           new HttpGet(
-              Optional.ofNullable(package_.getLocation())
-                      .orElse("https://packages2.fhir.org/packages")
+              url
                   + "/"
                   + Optional.ofNullable(package_.getId()).orElse("hl7.fhir.r4.core")
                   + "/"
@@ -146,21 +188,8 @@ public class FederatorRestfulServer extends RestfulServer {
       response = client.execute(req);
       if (!(response.getStatusLine().getStatusCode() < 200)
           && !(response.getStatusLine().getStatusCode() > 299)) {
-        NpmPackage pkg = NpmPackage.fromPackage(response.getEntity().getContent());
-        if (pkg.getFolders().containsKey("package")) {
-          NpmPackage.NpmPackageFolder packageFolder = pkg.getFolders().get("package");
-
-          for (String nextFile : packageFolder.listFiles()) {
-            if (nextFile.toLowerCase(Locale.US).endsWith(".json")) {
-              String input =
-                  new String(packageFolder.getContent().get(nextFile), StandardCharsets.UTF_8);
-              IBaseResource resource = getFhirContext().newJsonParser().parseResource(input);
-              if (resource instanceof SearchParameter) {
-                sps.add((SearchParameter) resource);
-              }
-            }
-          }
-        }
+         return  NpmPackage.fromPackage(response.getEntity().getContent());
+        
       }
 
     } catch (Exception e) {
@@ -174,36 +203,23 @@ public class FederatorRestfulServer extends RestfulServer {
         }
       }
     }
-
-    return sps;
+    return null;
   }
-  /*
-   * private List<SearchParameter> getSearchParametersFromConfig(
-   * ResourceRegistry rr, ClientRegistry cr) {
-   * List<SearchParameter> params = new ArrayList<>();
-   * String url = configuration.getSetup().getUrl();
-   * String dummy = rr.getServer4Resource("metadata").get(0).getServer();
-   * do {
-   * Bundle searchParameters =
-   * cr.getClient(dummy)
-   * .search()
-   * .byUrl(url)
-   * .accept(
-   * "application/json;q=1.0;application/fhir+xml;q=1.0, application/fhir+json;q=1.0,"
-   * + " application/xml+fhir;q=0.9, application/json+fhir;q=0.9")
-   * .returnBundle(Bundle.class)
-   * .execute();
-   *
-   * searchParameters.getEntry().forEach(x -> params.add((SearchParameter)
-   * x.getResource()));
-   *
-   * url =
-   * searchParameters.getLink(IBaseBundle.LINK_NEXT) == null
-   * ? null
-   * : searchParameters.getLink(IBaseBundle.LINK_NEXT).getUrl();
-   * } while (url != null);
-   *
-   * return params;
-   * }
-   */
+
+  private void getSearchParametersFromPackage(List<SearchParameter> sps, NpmPackage pkg) {
+    if (pkg.getFolders().containsKey("package")) {
+      NpmPackage.NpmPackageFolder packageFolder = pkg.getFolders().get("package");
+
+      for (String nextFile : packageFolder.listFiles()) {
+        if (nextFile.toLowerCase(Locale.US).endsWith(".json")) {
+          String input =
+              new String(packageFolder.getContent().get(nextFile), StandardCharsets.UTF_8);
+          IBaseResource resource = getFhirContext().newJsonParser().parseResource(input);
+          if (resource instanceof SearchParameter) {
+            sps.add((SearchParameter) resource);
+          }
+        }
+      }
+    }
+  }
 }

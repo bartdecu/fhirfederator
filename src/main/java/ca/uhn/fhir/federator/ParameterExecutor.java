@@ -267,4 +267,9 @@ public class ParameterExecutor {
   public void setCachedResources(Map<String, List<IBaseResource>> resourceCachePerParameter) {
     this.resourceCachePerParameter = resourceCachePerParameter;
   }
+
+  @Override
+  public String toString() {
+    return "ParameterExecutor [urlsPerParameter=" + urlsPerParameter + "]";
+  }
 }

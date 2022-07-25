@@ -121,6 +121,8 @@ public class FederatedSearchProvider {
 
     Node root = createAST(visitor);
 
+    ourLog.info(root.toString());
+
     return root.execute();
   }
 
