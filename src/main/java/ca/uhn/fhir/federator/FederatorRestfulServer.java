@@ -131,45 +131,46 @@ public class FederatorRestfulServer extends RestfulServer {
   private List<SearchParameter> getSearchParametersFromNpmPackage(Package package_) {
     List<SearchParameter> sps = new ArrayList<>();
     NpmPackage pkg = null;
-    if (package_.getLocation()==null){
-      String dir = System.getProperty("user.home")+File.separator +".fhir"+ File.separator + "packages";
+    if (package_.getLocation() == null) {
+      String dir =
+          System.getProperty("user.home") + File.separator + ".fhir" + File.separator + "packages";
       pkg = getNpmPackageFromFhirCache(dir, package_);
-      if (pkg == null){
+      if (pkg == null) {
         String url = "https://packages2.fhir.org/packages";
         pkg = getNpmPackageFromFhirRegistry(url, package_);
       }
 
-      
-    }else{
-      if(package_.getLocation().startsWith("http")){
-        pkg = getNpmPackageFromFhirRegistry(package_.getLocation(),package_);
+    } else {
+      if (package_.getLocation().startsWith("http")) {
+        pkg = getNpmPackageFromFhirRegistry(package_.getLocation(), package_);
       } else {
-        pkg = getNpmPackageFromFhirCache(package_.getLocation(), package_);    
+        pkg = getNpmPackageFromFhirCache(package_.getLocation(), package_);
       }
     }
-    
-    if (pkg!=null){
+
+    if (pkg != null) {
       getSearchParametersFromPackage(sps, pkg);
     }
-    
 
     return sps;
   }
-  
 
   private NpmPackage getNpmPackageFromFhirCache(String dir, Package package_) {
-  
-    String p = File.separator + Optional.ofNullable(package_.getId()).orElse("hl7.fhir.r4.core")+"#"+Optional.ofNullable(package_.getVersion()).orElse("4.0.1");
+
+    String p =
+        File.separator
+            + Optional.ofNullable(package_.getId()).orElse("hl7.fhir.r4.core")
+            + "#"
+            + Optional.ofNullable(package_.getVersion()).orElse("4.0.1");
     try {
-      NpmPackage pkg = NpmPackage.fromFolder(dir+p/*, null, new String[]{}*/);
+      NpmPackage pkg = NpmPackage.fromFolder(dir + p /*, null, new String[]{}*/);
       pkg.loadAllFiles();
       return pkg;
     } catch (IOException e) {
-      
+
       ourLog.error(e.getMessage(), e);
       return null;
     }
-    
   }
 
   private NpmPackage getNpmPackageFromFhirRegistry(String url, Package package_) {
@@ -188,8 +189,7 @@ public class FederatorRestfulServer extends RestfulServer {
       response = client.execute(req);
       if (!(response.getStatusLine().getStatusCode() < 200)
           && !(response.getStatusLine().getStatusCode() > 299)) {
-         return  NpmPackage.fromPackage(response.getEntity().getContent());
-        
+        return NpmPackage.fromPackage(response.getEntity().getContent());
       }
 
     } catch (Exception e) {
