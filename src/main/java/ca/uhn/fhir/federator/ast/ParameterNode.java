@@ -62,4 +62,9 @@ public class ParameterNode implements Node {
   public boolean isIterate() {
     return iterate;
   }
+
+  @Override
+  public String toString() {
+    return "ParameterNode [iterate=" + iterate + ", parsedUrls=" + parsedUrls + "]";
+  }
 }

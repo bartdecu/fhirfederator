@@ -33,4 +33,9 @@ public class IncludeNode implements Node {
     return new SimpleBundleProvider(
         providers.stream().flatMap(x -> x.getAllResources().stream()).collect(Collectors.toList()));
   }
+
+  @Override
+  public String toString() {
+    return "IncludeNode [parameterNode=" + parameterNode + ", referenceNode=" + referenceNode + "]";
+  }
 }

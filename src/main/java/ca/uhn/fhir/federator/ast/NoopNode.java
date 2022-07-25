@@ -39,4 +39,9 @@ public class NoopNode implements Node {
   public IBundleProvider execute() {
     return new SimpleBundleProvider(resources);
   }
+
+  @Override
+  public String toString() {
+    return "NoopNode []";
+  }
 }
